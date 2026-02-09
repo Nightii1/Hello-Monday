@@ -1,6 +1,4 @@
 import streamlit as st
-import numpy as np
-from scipy.optimize import fsolve
 import math
 
 # ตั้งค่าหน้าเว็บ
@@ -150,29 +148,65 @@ def aashto_equation(SN, W18, ZR, S0, delta_psi, MR):
     AASHTO 1993 equation for flexible pavement design
     Returns the difference (should be zero when solved)
     """
-    log_W18 = math.log10(W18)
+    try:
+        log_W18 = math.log10(W18)
+        
+        term1 = ZR * S0
+        term2 = 9.36 * math.log10(SN + 1) - 0.20
+        
+        # Calculate ΔPSI term carefully
+        psi_ratio = delta_psi / 4.2 - 1.5
+        if psi_ratio <= 0:
+            psi_ratio = 0.001
+        term3_numerator = math.log10(psi_ratio)
+        term3_denominator = 0.40 + (1094 / ((SN + 1) ** 5.19))
+        term3 = term3_numerator / term3_denominator
+        
+        term4 = 2.32 * math.log10(MR) - 8.07
+        
+        result = term1 + term2 + term3 + term4
+        
+        return result - log_W18
+    except:
+        return float('inf')
+
+def solve_for_sn(W18, ZR, S0, delta_psi, MR, initial_guess=3.0, tolerance=0.0001, max_iterations=100):
+    """
+    Newton-Raphson method to solve for SN
+    """
+    SN = initial_guess
     
-    term1 = ZR * S0
-    term2 = 9.36 * math.log10(SN + 1) - 0.20
-    term3_numerator = math.log10(delta_psi / 4.2 - 1.5) if delta_psi / 4.2 - 1.5 > 0 else math.log10(0.001)
-    term3_denominator = 0.40 + (1094 / ((SN + 1) ** 5.19))
-    term3 = term3_numerator / term3_denominator
-    term4 = 2.32 * math.log10(MR) - 8.07
+    for i in range(max_iterations):
+        f = aashto_equation(SN, W18, ZR, S0, delta_psi, MR)
+        
+        # Calculate derivative numerically
+        h = 0.001
+        f_plus = aashto_equation(SN + h, W18, ZR, S0, delta_psi, MR)
+        df = (f_plus - f) / h
+        
+        if abs(df) < 1e-10:
+            break
+            
+        # Newton-Raphson update
+        SN_new = SN - f / df
+        
+        # Check convergence
+        if abs(SN_new - SN) < tolerance:
+            return SN_new
+            
+        SN = SN_new
+        
+        # Keep SN positive
+        if SN < 0:
+            SN = 0.1
     
-    result = term1 + term2 + term3 + term4
-    
-    return result - log_W18
+    return SN
 
 # ปุ่มคำนวณ
 if st.button("🔢 คำนวณ Structural Number (SN)", type="primary", use_container_width=True):
     try:
         # แก้สมการเพื่อหา SN
-        SN_initial_guess = 3.0
-        SN_required = fsolve(
-            aashto_equation, 
-            SN_initial_guess, 
-            args=(esal_input, z_r, s0, delta_psi, mr)
-        )[0]
+        SN_required = solve_for_sn(esal_input, z_r, s0, delta_psi, mr)
         
         # แสดงผลลัพธ์
         st.success("✅ คำนวณสำเร็จ!")
@@ -229,19 +263,59 @@ if st.button("🔢 คำนวณ Structural Number (SN)", type="primary", use_
         st.markdown("---")
         st.subheader("💡 คำแนะนำการออกแบบชั้นทาง")
         
+        # คำนวณตัวอย่างความหนาชั้นทาง
+        asphalt_thickness = (SN_required / 3) / 0.44
+        base_thickness = (SN_required / 3) / 0.14
+        subbase_thickness = (SN_required / 3) / 0.11
+        
         st.info(f"""
         **สำหรับ SN = {SN_required:.2f}** คุณสามารถออกแบบชั้นทางได้หลายแบบ เช่น:
         
         **ตัวอย่างการออกแบบ (ใช้ค่า layer coefficient มาตรฐาน):**
-        - ชั้นผิว Asphalt Concrete (a₁ = 0.44): D₁ = {(SN_required / 3) / 0.44:.1f} นิ้ว
-        - ชั้นฐาน Base Course (a₂ = 0.14, m₂ = 1.0): D₂ = {(SN_required / 3) / 0.14:.1f} นิ้ว  
-        - ชั้นรอง Subbase (a₃ = 0.11, m₃ = 1.0): D₃ = {(SN_required / 3) / 0.11:.1f} นิ้ว
+        - ชั้นผิว Asphalt Concrete (a₁ = 0.44): D₁ ≈ {asphalt_thickness:.1f} นิ้ว
+        - ชั้นฐาน Base Course (a₂ = 0.14, m₂ = 1.0): D₂ ≈ {base_thickness:.1f} นิ้ว  
+        - ชั้นรอง Subbase (a₃ = 0.11, m₃ = 1.0): D₃ ≈ {subbase_thickness:.1f} นิ้ว
         
         **หมายเหตุ:** สูตร SN = a₁D₁ + a₂D₂m₂ + a₃D₃m₃
-        - a = layer coefficient
-        - D = ความหนักชั้นทาง (นิ้ว)
-        - m = drainage coefficient
+        - a = layer coefficient (ค่าสัมประสิทธิ์ชั้นทาง)
+        - D = ความหนาชั้นทาง (นิ้ว)
+        - m = drainage coefficient (ค่าสัมประสิทธิ์การระบายน้ำ)
         """)
+        
+        # แสดงตัวอย่างการออกแบบที่เป็นไปได้
+        st.subheader("🏗️ ตัวอย่างการออกแบบชั้นทางที่เป็นไปได้")
+        
+        design_col1, design_col2 = st.columns(2)
+        
+        with design_col1:
+            st.markdown("**แบบที่ 1: Thick Asphalt**")
+            d1_opt1 = 5.0
+            sn1_opt1 = 0.44 * d1_opt1
+            remaining_sn1 = SN_required - sn1_opt1
+            d2_opt1 = (remaining_sn1 / 2) / 0.14
+            d3_opt1 = (remaining_sn1 / 2) / 0.11
+            
+            st.markdown(f"""
+            - Asphalt: {d1_opt1:.1f} นิ้ว
+            - Base: {d2_opt1:.1f} นิ้ว
+            - Subbase: {d3_opt1:.1f} นิ้ว
+            - **SN รวม: {(0.44*d1_opt1 + 0.14*d2_opt1 + 0.11*d3_opt1):.2f}**
+            """)
+        
+        with design_col2:
+            st.markdown("**แบบที่ 2: Balanced Design**")
+            d1_opt2 = 3.5
+            sn1_opt2 = 0.44 * d1_opt2
+            remaining_sn2 = SN_required - sn1_opt2
+            d2_opt2 = (remaining_sn2 * 0.6) / 0.14
+            d3_opt2 = (remaining_sn2 * 0.4) / 0.11
+            
+            st.markdown(f"""
+            - Asphalt: {d1_opt2:.1f} นิ้ว
+            - Base: {d2_opt2:.1f} นิ้ว
+            - Subbase: {d3_opt2:.1f} นิ้ว
+            - **SN รวม: {(0.44*d1_opt2 + 0.14*d2_opt2 + 0.11*d3_opt2):.2f}**
+            """)
         
         # คำเตือน
         if SN_required > 6:
