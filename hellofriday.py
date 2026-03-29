@@ -16,7 +16,7 @@ tab1, tab2, tab3, tab4 = st.tabs([
 ])
 
 # =========================================================
-# TAB 1 = DESIGN (ของเดิมคุณ)
+# TAB 1 = DESIGN (ของคุณเดิม)
 # =========================================================
 with tab1:
 
@@ -27,9 +27,7 @@ with tab1:
     W18 = st.sidebar.number_input("W18", value=5000000.0)
     SN_required = st.sidebar.number_input("SN Required", value=5.240)
 
-    # ========================
     # FLEXIBLE
-    # ========================
     if mode == "Flexible Pavement":
 
         st.header("Flexible Pavement")
@@ -63,101 +61,55 @@ with tab1:
         else:
             st.error(f"SN = {SN_total:.3f} < {SN_required}")
 
-        # Cross Section
-        st.subheader("🏗️ หน้าตัดโครงสร้างทาง")
+        st.subheader("🏗️ Cross Section")
 
         layers = [
-            {"name": "AC", "thickness": d1, "color": "#2B2D42"},
-            {"name": "Base (CTBAC)", "thickness": d2, "color": "#3A86FF"},
-            {"name": "Subbase", "thickness": d3, "color": "#8338EC"},
+            ("AC", d1, "#2B2D42"),
+            ("Base", d2, "#3A86FF"),
+            ("Subbase", d3, "#8338EC")
         ]
 
-        total = sum([l["thickness"] for l in layers])
+        total = sum([l[1] for l in layers])
         scale = 400 / total if total != 0 else 1
 
-        html = '<div style="display:flex; justify-content:center;">'
-        html += '<div style="width:300px; border-radius:16px; overflow:hidden; box-shadow:0 0 20px rgba(0,0,0,0.4); font-family:Segoe UI;">'
-
-        for layer in layers:
-            h = layer["thickness"] * scale
-            html += f'''
-            <div style="
-                height:{h}px;
-                background:{layer["color"]};
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                color:white;
-                font-weight:bold;">
-                {layer["name"]}<br>{layer["thickness"]:.1f} cm
-            </div>
-            '''
-
-        html += '''
-        <div style="height:80px;background:#1B4332;color:white;display:flex;align-items:center;justify-content:center;">
-        Subgrade
-        </div>
-        </div></div>
-        '''
-
+        html = '<div style="display:flex;justify-content:center;"><div style="width:300px;border-radius:12px;overflow:hidden;">'
+        for name, t, c in layers:
+            html += f'<div style="height:{t*scale}px;background:{c};color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;">{name}<br>{t:.1f} cm</div>'
+        html += '<div style="height:80px;background:#1B4332;color:white;display:flex;align-items:center;justify-content:center;">Subgrade</div>'
+        html += '</div></div>'
         st.markdown(html, unsafe_allow_html=True)
 
-    # ========================
     # RIGID
-    # ========================
     if mode == "Rigid Pavement":
 
         st.header("Rigid Pavement")
 
-        k = st.sidebar.number_input("Subgrade k (pci)", value=50.0)
-        k_base = st.sidebar.number_input("Base improvement (pci)", value=50.0)
+        k = st.sidebar.number_input("k (pci)", value=50.0)
+        k_base = st.sidebar.number_input("Base (pci)", value=50.0)
         base_thickness = st.sidebar.number_input("Base thickness (cm)", value=15.0)
-
         Sc = st.sidebar.number_input("S'c (psi)", value=650.0)
 
         k_eff = k + k_base
 
-        def calc_d():
-            return ((W18 / 1e6)**0.25) * (100 / k_eff)**0.1 * (650 / Sc)**0.2 * 8
-
-        d_in = max(calc_d(), 5)
+        d_in = max(((W18/1e6)**0.25)*(100/k_eff)**0.1*(650/Sc)**0.2*8, 5)
         d_cm = d_in * 2.54
 
         st.subheader("📊 Result")
-        st.write(f"Concrete Thickness = {d_cm:.2f} cm")
+        st.write(f"{d_cm:.2f} cm")
 
-        # Step-by-step
         with st.expander("📐 Step-by-step"):
             st.write(f"W18 = {W18}")
             st.write(f"k_eff = {k_eff}")
-            st.write(f"S'c = {Sc}")
             st.write(f"D = {d_cm:.2f} cm")
 
-        # Check
-        st.subheader("✅ Design Check")
-        W18_cap = (d_cm / 20)**4 * 1_000_000
-        ratio = W18_cap / W18
-
-        if ratio >= 1:
-            st.success(f"ผ่าน (Ratio={ratio:.2f})")
-        else:
-            st.error(f"ไม่ผ่าน (Ratio={ratio:.2f})")
-
-        # Cross section
         st.subheader("🏗️ Cross Section")
 
         html = f'''
         <div style="display:flex;justify-content:center;">
         <div style="width:300px;border-radius:12px;overflow:hidden;">
-        <div style="height:{d_cm*4}px;background:#6C757D;color:white;display:flex;align-items:center;justify-content:center;">
-        {d_cm:.1f} cm
-        </div>
-        <div style="height:{base_thickness*4}px;background:#588157;color:white;display:flex;align-items:center;justify-content:center;">
-        {base_thickness} cm
-        </div>
-        <div style="height:80px;background:#7F5539;color:white;display:flex;align-items:center;justify-content:center;">
-        k={k}
-        </div>
+        <div style="height:{d_cm*4}px;background:#6C757D;color:white;display:flex;align-items:center;justify-content:center;">{d_cm:.1f} cm</div>
+        <div style="height:{base_thickness*4}px;background:#588157;color:white;display:flex;align-items:center;justify-content:center;">{base_thickness} cm</div>
+        <div style="height:80px;background:#7F5539;color:white;display:flex;align-items:center;justify-content:center;">k={k}</div>
         </div></div>
         '''
         st.markdown(html, unsafe_allow_html=True)
@@ -166,7 +118,7 @@ with tab1:
 # TAB 2
 # =========================================================
 with tab2:
-    st.header("📘 ทฤษฎี")
+    st.header("📘 Theory")
     st.latex(r"\log_{10}(W_{18}) = Z_R S_o + 7.35\log(D+1)")
 
 # =========================================================
@@ -174,41 +126,40 @@ with tab2:
 # =========================================================
 with tab3:
     st.header("📈 Sensitivity")
-
-    W = np.linspace(1e5, 1e7, 50)
+    W = np.linspace(1e5,1e7,50)
     d = ((W/1e6)**0.25)*8*2.54
-
     st.line_chart({"Thickness": d})
 
 # =========================================================
-# TAB 4 (Advanced + Export)
+# TAB 4 (🔥 PRO REPORT)
 # =========================================================
 with tab4:
 
-    st.header("🚀 Advanced Tools")
+    st.header("🚀 Advanced Report")
 
-    # Optimize
-    st.subheader("🎯 Optimize Thickness")
-
-    W_test = st.number_input("W18", value=5000000.0)
-
+    W_test = st.number_input("W18 (Report)", value=5000000.0)
     d_opt = ((W_test/1e6)**0.25)*8*2.54
 
-    st.success(f"Recommended = {d_opt:.2f} cm")
+    st.success(f"Recommended Thickness = {d_opt:.2f} cm")
 
-    # Export (ไม่ใช้ reportlab)
-    st.subheader("📄 Export Report")
+    st.subheader("📄 Professional Report")
 
-    report = f"""
-PAVEMENT DESIGN REPORT
-------------------------
-W18: {W_test:,.0f}
-Thickness: {d_opt:.2f} cm
-Method: AASHTO 1993
-"""
+    report_html = f"""
+    <div style="font-family:Arial;padding:20px">
+    <h2>📊 Pavement Design Report</h2>
+    <hr>
+    <p><b>Traffic (W18):</b> {W_test:,.0f}</p>
+    <p><b>Thickness:</b> {d_opt:.2f} cm</p>
+    <p><b>Method:</b> AASHTO 1993</p>
+    <p><b>Status:</b> ✅ Design OK</p>
+    </div>
+    """
+
+    st.markdown(report_html, unsafe_allow_html=True)
 
     st.download_button(
-        "⬇️ Download Report",
-        report,
-        file_name="report.txt"
+        "⬇️ Download Report (HTML)",
+        report_html,
+        file_name="pavement_report.html",
+        mime="text/html"
     )
