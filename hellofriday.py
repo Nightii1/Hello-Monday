@@ -22,32 +22,26 @@ if mode == "Flexible Pavement":
 
     st.header("Flexible Pavement")
 
-    # 🔥 เปลี่ยนเฉพาะตรงนี้ (Layer Panel)
+    # -------- Layer Panel --------
     st.sidebar.markdown("## 🧱 Layer Configuration")
 
-    # -------- AC --------
     with st.sidebar.expander("Layer 1: Asphalt (AC)", expanded=True):
         a1 = st.number_input("a1 (AC)", value=0.40)
         m1 = st.number_input("m1 (AC)", value=1.10)
         d1 = st.number_input("Thickness AC (cm)", value=20.3)
-        st.caption("Typical range: 5 – 20 cm")
 
-    # -------- BASE --------
     with st.sidebar.expander("Layer 2: Base (CTBAC)"):
         a2 = st.number_input("a2 (Base)", value=0.18)
         m2 = st.number_input("m2 (Base)", value=1.10)
         d2 = st.number_input("Thickness Base (cm)", value=22.2)
-        st.caption("Typical range: 10 – 30 cm")
 
-    # -------- SUBBASE --------
     with st.sidebar.expander("Layer 3: Subbase"):
         a3 = st.number_input("a3 (Subbase)", value=0.13)
         m3 = st.number_input("m3 (Subbase)", value=1.10)
         d3 = st.number_input("Thickness Subbase (cm)", value=10.2)
-        st.caption("Typical range: 10 – 25 cm")
 
     # ------------------------
-    # CALC SN (เดิมทั้งหมด)
+    # CALC SN
     # ------------------------
     def SN(a, m, D):
         return a * m * (D / 2.54)
@@ -60,6 +54,9 @@ if mode == "Flexible Pavement":
 
     st.info(f"W18 = {W18:,.0f}")
 
+    # ------------------------
+    # TABLE
+    # ------------------------
     st.subheader("📋 ตารางสรุป")
 
     table = {
@@ -76,14 +73,14 @@ if mode == "Flexible Pavement":
         st.error(f"SN = {SN_total:.3f} < {SN_required} (ไม่ผ่าน)")
 
     # ------------------------
-    # CROSS SECTION (เดิม)
+    # CROSS SECTION (แก้เฉพาะตรงนี้)
     # ------------------------
     st.subheader("🏗️ หน้าตัดโครงสร้างทาง")
 
     layers = [
-        {"name": "AC", "thickness": d1, "color": "#222222"},
-        {"name": "Base (CTBAC)", "thickness": d2, "color": "#6b8e9e"},
-        {"name": "Subbase", "thickness": d3, "color": "#8b6b43"},
+        {"name": "AC", "thickness": d1, "color": "#2B2D42"},
+        {"name": "Base (CTBAC)", "thickness": d2, "color": "#3A86FF"},
+        {"name": "Subbase", "thickness": d3, "color": "#8338EC"},
     ]
 
     total = sum([l["thickness"] for l in layers])
@@ -92,8 +89,12 @@ if mode == "Flexible Pavement":
 
     scale = 400 / total
 
-    html = '<div style="display:flex; justify-content:center;">'
-    html += '<div style="width:280px; border:2px solid #ccc;">'
+    html = (
+        '<div style="display:flex; justify-content:center;">'
+        '<div style="width:300px; border-radius:16px; overflow:hidden; '
+        'box-shadow:0 0 20px rgba(0,0,0,0.4); '
+        'font-family:Segoe UI, sans-serif;">'
+    )
 
     for layer in layers:
         h = layer["thickness"] * scale
@@ -103,16 +104,17 @@ if mode == "Flexible Pavement":
             'background:' + layer["color"] + ';'
             'display:flex;flex-direction:column;'
             'align-items:center;justify-content:center;'
-            'color:white;font-weight:bold;">'
+            'color:white;font-weight:600;font-size:14px;'
+            'letter-spacing:0.5px;">'
             + layer["name"] + '<br>'
             + f'{layer["thickness"]:.1f} cm'
             + '</div>'
         )
 
     html += (
-        '<div style="height:80px;background:#704214;'
+        '<div style="height:80px;background:#1B4332;'
         'display:flex;align-items:center;justify-content:center;'
-        'color:white;font-weight:bold;">'
+        'color:#D8F3DC;font-weight:600;font-size:14px;">'
         'Subgrade</div>'
     )
 
@@ -121,7 +123,7 @@ if mode == "Flexible Pavement":
     st.markdown(html, unsafe_allow_html=True)
 
 # ========================
-# RIGID (เดิมทั้งหมด)
+# RIGID (เดิม)
 # ========================
 if mode == "Rigid Pavement":
 
