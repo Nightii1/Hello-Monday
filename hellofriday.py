@@ -6,13 +6,14 @@ st.set_page_config(layout="wide")
 st.title("📊 Pavement Design (AASHTO 1993)")
 
 # ------------------------
-# SIDEBAR (กลับมาแล้ว)
+# SIDEBAR
 # ------------------------
 st.sidebar.header("🔧 Input")
 
 mode = st.sidebar.radio("เลือกประเภท", ["Flexible Pavement", "Rigid Pavement"])
 
-SN_required = st.sidebar.number_input("SN Required", value=5.240)
+# 👉 เพิ่ม W18 กลับมาแล้ว
+W18 = st.sidebar.number_input("W18", value=5000000.0)
 
 # ========================
 # FLEXIBLE
@@ -21,7 +22,7 @@ if mode == "Flexible Pavement":
 
     st.header("Flexible Pavement")
 
-    # INPUT จาก sidebar
+    # INPUT
     a1 = st.sidebar.number_input("a1 (AC)", value=0.40)
     m1 = st.sidebar.number_input("m1", value=1.10)
     d1 = st.sidebar.number_input("AC (cm)", value=20.3)
@@ -35,6 +36,8 @@ if mode == "Flexible Pavement":
     d3 = st.sidebar.number_input("Subbase (cm)", value=10.2)
 
     d4 = st.sidebar.number_input("Improvement (cm)", value=10.2)
+
+    SN_required = st.sidebar.number_input("SN Required", value=5.240)
 
     # ------------------------
     # CALC SN
@@ -50,13 +53,19 @@ if mode == "Flexible Pavement":
     SN_total = SN1 + SN2 + SN3 + SN4
 
     # ------------------------
+    # SHOW W18
+    # ------------------------
+    st.info(f"W18 = {W18:,.0f}")
+
+    # ------------------------
     # TABLE
     # ------------------------
     st.subheader("📋 ตารางสรุป")
 
     table = {
-        "Layer": ["AC", "Base", "Subbase", "Improvement"],
+        "Layer": ["AC", "Base (CTBAC)", "Subbase", "Improvement"],
         "Thickness (cm)": [d1, d2, d3, d4],
+        "Thickness (inch)": [d1/2.54, d2/2.54, d3/2.54, d4/2.54],
         "SN": [SN1, SN2, SN3, SN4]
     }
 
@@ -69,7 +78,7 @@ if mode == "Flexible Pavement":
         st.error(f"SN = {SN_total:.3f} < {SN_required} (ไม่ผ่าน)")
 
     # ------------------------
-    # CROSS SECTION
+    # CROSS SECTION (Dynamic + แยกชั้น)
     # ------------------------
     st.subheader("🏗️ หน้าตัดโครงสร้างทาง")
 
@@ -103,6 +112,7 @@ if mode == "Flexible Pavement":
             + '</div>'
         )
 
+    # Subgrade
     html += (
         '<div style="height:80px;background:#704214;'
         'display:flex;align-items:center;justify-content:center;'
@@ -148,4 +158,5 @@ if mode == "Rigid Pavement":
     </div>
     """
 
+    st.markdown(html, unsafe_allow_html=True)
     st.markdown(html, unsafe_allow_html=True)
