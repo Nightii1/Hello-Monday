@@ -1,6 +1,5 @@
 import streamlit as st
 import math
-import matplotlib.pyplot as plt
 
 # ==============================
 # CONFIG
@@ -73,9 +72,6 @@ def solve_SN():
         SN = max(SN_new, 0.1)
     return SN
 
-# ==============================
-# BUTTON SN
-# ==============================
 SN = None
 
 if st.button("🔢 Calculate SN"):
@@ -124,34 +120,41 @@ if SN:
         st.write(f"Subbase = {D3:.2f} in")
 
         # ==============================
-        # DRAW GRAPH
+        # SECTION (NO MATPLOTLIB)
         # ==============================
         st.subheader("🧱 Pavement Section")
 
-        layers = [
-            ("Asphalt", D1, "#333333"),
-            ("Base", D2, "#c2b280"),
-            ("Subbase", D3, "#8fbc8f"),
-        ]
+        scale = 10  # ปรับความสูง
 
-        fig, ax = plt.subplots(figsize=(4,6))
-        current_height = 0
+        asphalt_h = D1 * scale
+        base_h = D2 * scale
+        subbase_h = D3 * scale
 
-        for name, thickness, color in layers:
-            if thickness > 0:
-                ax.bar(0, thickness, bottom=current_height, color=color, edgecolor="black")
-                ax.text(0, current_height + thickness/2,
-                        f"{name}\n{thickness:.1f} in",
-                        ha='center', va='center', color='white')
-                current_height += thickness
+        st.markdown(f"""
+        <div style="width:200px; margin:auto; text-align:center;">
+            
+            <div style="background:#333;color:white;padding:5px;">
+            Asphalt ({D1:.1f} in)
+            </div>
+            <div style="height:{asphalt_h}px;background:#333;"></div>
 
-        ax.bar(0, 2, bottom=current_height, color="#d3d3d3", edgecolor="black")
-        ax.text(0, current_height + 1, "Subgrade", ha='center')
+            <div style="background:#c2b280;padding:5px;">
+            Base ({D2:.1f} in)
+            </div>
+            <div style="height:{base_h}px;background:#c2b280;"></div>
 
-        ax.set_xticks([])
-        ax.set_ylabel("Thickness (inch)")
+            <div style="background:#8fbc8f;padding:5px;">
+            Subbase ({D3:.1f} in)
+            </div>
+            <div style="height:{subbase_h}px;background:#8fbc8f;"></div>
 
-        st.pyplot(fig)
+            <div style="background:#d3d3d3;padding:5px;">
+            Subgrade
+            </div>
+            <div style="height:40px;background:#d3d3d3;"></div>
+
+        </div>
+        """, unsafe_allow_html=True)
 
 # ==============================
 # RIGID
