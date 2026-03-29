@@ -34,26 +34,23 @@ if mode == "Flexible Pavement":
     m3 = st.sidebar.number_input("m3", value=1.10)
     d3 = st.sidebar.number_input("Subbase (cm)", value=10.2)
 
-    d4 = st.sidebar.number_input("Improvement (cm)", value=10.2)
-
     def SN(a, m, D):
         return a * m * (D / 2.54)
 
     SN1 = SN(a1, m1, d1)
     SN2 = SN(a2, m2, d2)
     SN3 = SN(a3, m3, d3)
-    SN4 = 0.10 * 1.10 * (d4 / 2.54)
 
-    SN_total = SN1 + SN2 + SN3 + SN4
+    SN_total = SN1 + SN2 + SN3
 
     st.info(f"W18 = {W18:,.0f}")
 
     st.subheader("📋 ตารางสรุป")
 
     table = {
-        "Layer": ["AC", "Base (CTBAC)", "Subbase", "Improvement"],
-        "Thickness (cm)": [d1, d2, d3, d4],
-        "SN": [SN1, SN2, SN3, SN4]
+        "Layer": ["AC", "Base (CTBAC)", "Subbase"],
+        "Thickness (cm)": [d1, d2, d3],
+        "SN": [SN1, SN2, SN3]
     }
 
     st.dataframe(table, use_container_width=True)
@@ -72,7 +69,6 @@ if mode == "Flexible Pavement":
         {"name": "AC", "thickness": d1, "color": "#222222"},
         {"name": "Base (CTBAC)", "thickness": d2, "color": "#6b8e9e"},
         {"name": "Subbase", "thickness": d3, "color": "#8b6b43"},
-        {"name": "Improvement", "thickness": d4, "color": "#d4a017"},
     ]
 
     total = sum([l["thickness"] for l in layers])
