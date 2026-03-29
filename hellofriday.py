@@ -115,50 +115,51 @@ with tab1:
         st.markdown(html, unsafe_allow_html=True)
 
 # =========================================================
-# TAB 2 (🔥 แก้ตรงนี้เท่านั้น)
+# TAB 2 (🔥 เพิ่ม Flexible + Rigid ครบ)
 # =========================================================
 with tab2:
     st.header("📘 ทฤษฎีและสูตร AASHTO 1993")
 
+    # -------- FLEXIBLE --------
+    st.subheader("Flexible Pavement (Structural Number)")
+
+    st.latex(r"SN = a_1 D_1 m_1 + a_2 D_2 m_2 + a_3 D_3 m_3")
+
+    st.markdown("""
+    **ตัวแปร (Flexible):**
+    - **SN** = Structural Number  
+    - **aᵢ** = Layer coefficient  
+    - **Dᵢ** = ความหนาแต่ละชั้น (inch)  
+    - **mᵢ** = Drainage coefficient  
+    """)
+
+    st.markdown("""
+    **ขั้นตอนออกแบบ Flexible:**
+    1. คำนวณ W18  
+    2. หา SN required จาก nomograph  
+    3. เลือกวัสดุ → aᵢ  
+    4. กำหนด mᵢ  
+    5. คำนวณ Dᵢ  
+    """)
+
+    st.divider()
+
+    # -------- RIGID --------
     st.subheader("Rigid Pavement Design Equation")
 
     st.latex(r"""
     \log_{10}(W_{18}) = Z_R S_o + 7.35\log_{10}(D+1) - 0.06
     + \frac{\log_{10}(\Delta PSI / (4.5 - 1.5))}
     {1 + \frac{1.624 \times 10^7}{(D+1)^{8.46}}}
-    + (4.22 - 0.32p_t)\log_{10}
-    \left(
-    \frac{S_c C_d (D^{0.75} - 1.132)}
-    {215.63 J \left(D^{0.75} - \frac{18.42}{(E_c/k)^{0.25}}\right)}
-    \right)
     """)
 
-    st.subheader("🔎 ความหมายตัวแปร")
-
     st.markdown("""
-    - **W18** = จำนวนเพลามาตรฐานสะสม (ESAL)  
-    - **ZR** = ค่าความเชื่อมั่น (Reliability factor)  
-    - **So** = Standard deviation  
-    - **D** = ความหนาแผ่นคอนกรีต (inch)  
-    - **ΔPSI** = ค่า Serviceability loss (Po - Pt)  
-    - **Pt** = Terminal serviceability  
-    - **Sc** = Modulus of Rupture (psi)  
-    - **Ec** = Elastic Modulus (psi)  
-    - **k** = Modulus of Subgrade Reaction (pci)  
-    - **J** = Load transfer coefficient  
-    - **Cd** = Drainage coefficient  
-    """)
-
-    st.subheader("📌 ขั้นตอนการออกแบบ")
-
-    st.markdown("""
-    1. กำหนดค่า W18 จากการจราจร  
-    2. เลือก Reliability → หา ZR  
-    3. กำหนด So, Pt  
-    4. เลือกคุณสมบัติคอนกรีต (Sc, Ec)  
-    5. คำนวณค่า k ของ subgrade  
-    6. เลือก J และ Cd  
-    7. แก้สมการหา D  
+    **ตัวแปร (Rigid):**
+    - W18 = ESAL  
+    - D = thickness (inch)  
+    - k = subgrade  
+    - Sc = modulus of rupture  
+    - ZR = reliability  
     """)
 
 # =========================================================
@@ -181,8 +182,6 @@ with tab4:
     d_opt = ((W_test/1e6)**0.25)*8*2.54
 
     st.success(f"Recommended Thickness = {d_opt:.2f} cm")
-
-    st.subheader("📄 Professional Report")
 
     report_html = f"""
     <div style="font-family:Arial;padding:20px">
