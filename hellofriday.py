@@ -115,11 +115,51 @@ with tab1:
         st.markdown(html, unsafe_allow_html=True)
 
 # =========================================================
-# TAB 2
+# TAB 2 (🔥 แก้ตรงนี้เท่านั้น)
 # =========================================================
 with tab2:
-    st.header("📘 Theory")
-    st.latex(r"\log_{10}(W_{18}) = Z_R S_o + 7.35\log(D+1)")
+    st.header("📘 ทฤษฎีและสูตร AASHTO 1993")
+
+    st.subheader("Rigid Pavement Design Equation")
+
+    st.latex(r"""
+    \log_{10}(W_{18}) = Z_R S_o + 7.35\log_{10}(D+1) - 0.06
+    + \frac{\log_{10}(\Delta PSI / (4.5 - 1.5))}
+    {1 + \frac{1.624 \times 10^7}{(D+1)^{8.46}}}
+    + (4.22 - 0.32p_t)\log_{10}
+    \left(
+    \frac{S_c C_d (D^{0.75} - 1.132)}
+    {215.63 J \left(D^{0.75} - \frac{18.42}{(E_c/k)^{0.25}}\right)}
+    \right)
+    """)
+
+    st.subheader("🔎 ความหมายตัวแปร")
+
+    st.markdown("""
+    - **W18** = จำนวนเพลามาตรฐานสะสม (ESAL)  
+    - **ZR** = ค่าความเชื่อมั่น (Reliability factor)  
+    - **So** = Standard deviation  
+    - **D** = ความหนาแผ่นคอนกรีต (inch)  
+    - **ΔPSI** = ค่า Serviceability loss (Po - Pt)  
+    - **Pt** = Terminal serviceability  
+    - **Sc** = Modulus of Rupture (psi)  
+    - **Ec** = Elastic Modulus (psi)  
+    - **k** = Modulus of Subgrade Reaction (pci)  
+    - **J** = Load transfer coefficient  
+    - **Cd** = Drainage coefficient  
+    """)
+
+    st.subheader("📌 ขั้นตอนการออกแบบ")
+
+    st.markdown("""
+    1. กำหนดค่า W18 จากการจราจร  
+    2. เลือก Reliability → หา ZR  
+    3. กำหนด So, Pt  
+    4. เลือกคุณสมบัติคอนกรีต (Sc, Ec)  
+    5. คำนวณค่า k ของ subgrade  
+    6. เลือก J และ Cd  
+    7. แก้สมการหา D  
+    """)
 
 # =========================================================
 # TAB 3
@@ -131,7 +171,7 @@ with tab3:
     st.line_chart({"Thickness": d})
 
 # =========================================================
-# TAB 4 (🔥 PRO REPORT)
+# TAB 4
 # =========================================================
 with tab4:
 
