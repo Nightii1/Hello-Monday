@@ -127,7 +127,7 @@ if road == "Flexible Pavement":
         "SN":[SN1,SN2,SN3,SN4,SN5]
     })
 
-    # CROSS SECTION (แก้เรียง)
+    # CROSS SECTION
     st.subheader("Cross Section")
 
     fig, ax = plt.subplots(figsize=(3,6))
@@ -224,7 +224,6 @@ if road == "Rigid Pavement":
         "SN":[SN1,SN2,SN3,SN4,SN5]
     })
 
-    # CROSS SECTION (แก้เรียง)
     st.subheader("Cross Section")
 
     fig, ax = plt.subplots(figsize=(3,6))
@@ -250,6 +249,10 @@ if road == "Rigid Pavement":
 
     ax.set_xlim(-1,1)
     ax.set_xticks([])
+    ax.set_ylabel("Thickness (cm)")
+    ax.set_title("Rigid Pavement Section")
+
+    st.pyplot(fig)
     ax.set_ylabel("Thickness (cm)")
     ax.set_title("Rigid Pavement Section")
 
