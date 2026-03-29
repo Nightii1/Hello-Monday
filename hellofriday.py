@@ -16,7 +16,7 @@ W18 = st.sidebar.number_input("W18", value=5000000.0)
 SN_required = st.sidebar.number_input("SN Required", value=5.240)
 
 # ========================
-# FLEXIBLE (คืนครบเหมือนเดิม)
+# FLEXIBLE (เหมือนเดิม)
 # ========================
 if mode == "Flexible Pavement":
 
@@ -42,11 +42,7 @@ if mode == "Flexible Pavement":
     def SN(a, m, D):
         return a * m * (D / 2.54)
 
-    SN1 = SN(a1, m1, d1)
-    SN2 = SN(a2, m2, d2)
-    SN3 = SN(a3, m3, d3)
-
-    SN_total = SN1 + SN2 + SN3
+    SN_total = SN(a1, m1, d1) + SN(a2, m2, d2) + SN(a3, m3, d3)
 
     st.info(f"W18 = {W18:,.0f}")
 
@@ -55,7 +51,7 @@ if mode == "Flexible Pavement":
     else:
         st.error(f"SN = {SN_total:.3f} < {SN_required}")
 
-    # 🔥 Cross Section (กลับมาแล้ว)
+    # Cross Section
     st.subheader("🏗️ หน้าตัดโครงสร้างทาง")
 
     layers = [
@@ -84,7 +80,7 @@ if mode == "Flexible Pavement":
     st.markdown(html, unsafe_allow_html=True)
 
 # ========================
-# RIGID (แก้เฉพาะส่วนนี้)
+# RIGID (🔥 อัปเกรดครบ)
 # ========================
 if mode == "Rigid Pavement":
 
@@ -99,9 +95,10 @@ if mode == "Rigid Pavement":
     J = st.sidebar.number_input("J", value=3.2)
     Cd = st.sidebar.number_input("Cd", value=1.0)
 
+    # Effective k
     k_effective = k + k_base
 
-    # 🔥 Solver แก้แล้ว
+    # Solver (กัน 0)
     def calc_d():
         d = ((W18 / 1e6)**0.25) * (100 / k_effective)**0.1 * (650 / Sc)**0.2 * 8
         return max(d, 5)
@@ -109,12 +106,30 @@ if mode == "Rigid Pavement":
     d_in = calc_d()
     d_cm = d_in * 2.54
 
+    # ------------------------
+    # RESULT
+    # ------------------------
     st.subheader("📊 Result")
 
     st.write(f"Concrete Thickness = {d_cm:.2f} cm")
     st.write(f"Effective k = {k_effective:.1f} pci")
 
-    # Cross Section (3 ชั้น)
+    # ------------------------
+    # ✅ DESIGN CHECK (แบบที่คุณต้องการ)
+    # ------------------------
+    st.subheader("✅ Design Check")
+
+    W18_capacity = (d_cm / 20)**4 * 1_000_000
+    ratio = W18_capacity / W18
+
+    if ratio >= 1:
+        st.success(f"✔️ D = {d_cm:.0f} cm รับ W18 = {W18:,.0f} ≥ {W18:,.0f} (Ratio = {ratio:.3f})")
+    else:
+        st.error(f"❌ D = {d_cm:.0f} cm รับ W18 ไม่พอ (Ratio = {ratio:.3f})")
+
+    # ------------------------
+    # CROSS SECTION (3 ชั้น)
+    # ------------------------
     st.subheader("🏗️ Cross Section")
 
     scale = 4
@@ -124,10 +139,10 @@ if mode == "Rigid Pavement":
         '<div style="width:300px; border-radius:16px; overflow:hidden; box-shadow:0 0 20px rgba(0,0,0,0.4); font-family:Segoe UI;">'
 
         '<div style="height:' + str(d_cm*scale) + 'px;background:#6C757D;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;">'
-        + f'{d_cm:.1f} cm</div>'
+        + f'{d_cm:.1f} cm ({d_in:.2f} in)</div>'
 
         '<div style="height:' + str(base_thickness*scale) + 'px;background:#588157;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;">'
-        + f'{base_thickness:.0f} cm (+{k_base:.0f})</div>'
+        + f'{base_thickness:.0f} cm (+{k_base:.0f} pci)</div>'
 
         '<div style="height:80px;background:#7F5539;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;">'
         + f'k = {k:.0f} pci</div>'
