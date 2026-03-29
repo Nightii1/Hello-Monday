@@ -13,7 +13,13 @@ st.set_page_config(
 st.title("🛣️ Pavement Design (AASHTO 1993)")
 
 # ==============================
-# FLEXIBLE PAVEMENT (SN)
+# SESSION STATE
+# ==============================
+if "SN" not in st.session_state:
+    st.session_state.SN = None
+
+# ==============================
+# INPUT (SN)
 # ==============================
 st.header("📊 Flexible Pavement (SN)")
 
@@ -45,19 +51,16 @@ with col2:
     dpsi = pi - pt
 
 # ==============================
-# SN SOLVER
+# SN FUNCTION
 # ==============================
 def f_SN(SN):
-    try:
-        return (
-            ZR*S0
-            + 9.36*math.log10(SN+1) - 0.20
-            + math.log10(max(dpsi,0.01)) / (0.40 + 1094/((SN+1)**5.19))
-            + 2.32*math.log10(MR) - 8.07
-            - math.log10(W18)
-        )
-    except:
-        return 999
+    return (
+        ZR*S0
+        + 9.36*math.log10(SN+1) - 0.20
+        + math.log10(max(dpsi,0.01)) / (0.40 + 1094/((SN+1)**5.19))
+        + 2.32*math.log10(MR) - 8.07
+        - math.log10(W18)
+    )
 
 def solve_SN():
     SN = 3
@@ -72,10 +75,14 @@ def solve_SN():
         SN = max(SN_new, 0.1)
     return SN
 
-SN = None
-
+# ==============================
+# BUTTON SN
+# ==============================
 if st.button("🔢 Calculate SN"):
-    SN = solve_SN()
+    st.session_state.SN = solve_SN()
+
+if st.session_state.SN is not None:
+    SN = st.session_state.SN
     st.success(f"SN = {SN:.2f}")
 
 # ==============================
@@ -84,7 +91,9 @@ if st.button("🔢 Calculate SN"):
 st.markdown("---")
 st.header("🧱 Pavement Layer Design")
 
-if SN:
+if st.session_state.SN is not None:
+
+    SN = st.session_state.SN
 
     l1, l2, l3 = st.columns(3)
 
@@ -100,61 +109,42 @@ if SN:
         a3 = st.number_input("a3 (Subbase)", 0.05, 0.20, 0.11)
         m3 = st.number_input("m3", 0.5, 1.5, 1.0)
 
-    if st.button("📐 Calculate Layers"):
+    st.markdown("### 📊 Result")
 
-        SN1 = a1 * D1
+    SN1 = a1 * D1
+    D2 = max((SN - SN1) / (a2 * m2), 0)
+    SN2 = a2 * m2 * D2
+    D3 = max((SN - (SN1 + SN2)) / (a3 * m3), 0)
 
-        SN2_req = max(SN - SN1, 0)
-        D2 = SN2_req / (a2 * m2)
+    st.write(f"SN Required = {SN:.2f}")
+    st.write(f"Asphalt = {D1:.2f} in")
+    st.write(f"Base = {D2:.2f} in")
+    st.write(f"Subbase = {D3:.2f} in")
 
-        SN2 = a2 * m2 * D2
+    # ==============================
+    # SECTION (HTML)
+    # ==============================
+    st.subheader("🧱 Pavement Section")
 
-        SN3_req = max(SN - (SN1 + SN2), 0)
-        D3 = SN3_req / (a3 * m3) if SN3_req > 0 else 0
+    scale = 10
 
-        st.subheader("📊 Result")
+    st.markdown(f"""
+    <div style="width:200px; margin:auto; text-align:center;">
+        
+        <div style="background:#333;color:white;">Asphalt ({D1:.1f} in)</div>
+        <div style="height:{D1*scale}px;background:#333;"></div>
 
-        st.write(f"SN Required = {SN:.2f}")
-        st.write(f"Asphalt = {D1:.2f} in")
-        st.write(f"Base = {D2:.2f} in")
-        st.write(f"Subbase = {D3:.2f} in")
+        <div style="background:#c2b280;">Base ({D2:.1f} in)</div>
+        <div style="height:{D2*scale}px;background:#c2b280;"></div>
 
-        # ==============================
-        # SECTION (NO MATPLOTLIB)
-        # ==============================
-        st.subheader("🧱 Pavement Section")
+        <div style="background:#8fbc8f;">Subbase ({D3:.1f} in)</div>
+        <div style="height:{D3*scale}px;background:#8fbc8f;"></div>
 
-        scale = 10  # ปรับความสูง
+        <div style="background:#d3d3d3;">Subgrade</div>
+        <div style="height:40px;background:#d3d3d3;"></div>
 
-        asphalt_h = D1 * scale
-        base_h = D2 * scale
-        subbase_h = D3 * scale
-
-        st.markdown(f"""
-        <div style="width:200px; margin:auto; text-align:center;">
-            
-            <div style="background:#333;color:white;padding:5px;">
-            Asphalt ({D1:.1f} in)
-            </div>
-            <div style="height:{asphalt_h}px;background:#333;"></div>
-
-            <div style="background:#c2b280;padding:5px;">
-            Base ({D2:.1f} in)
-            </div>
-            <div style="height:{base_h}px;background:#c2b280;"></div>
-
-            <div style="background:#8fbc8f;padding:5px;">
-            Subbase ({D3:.1f} in)
-            </div>
-            <div style="height:{subbase_h}px;background:#8fbc8f;"></div>
-
-            <div style="background:#d3d3d3;padding:5px;">
-            Subgrade
-            </div>
-            <div style="height:40px;background:#d3d3d3;"></div>
-
-        </div>
-        """, unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
 
 # ==============================
 # RIGID
@@ -166,7 +156,7 @@ c1, c2 = st.columns(2)
 
 with c1:
     W18_r = st.number_input("ESAL (Rigid)", 1000.0, 1e8, 5e6)
-    R = st.selectbox("Reliability (Rigid)", list(ZR_map.keys()), index=6)
+    R = st.selectbox("Reliability", list(ZR_map.keys()), index=6)
     ZR_r = ZR_map[R]
     S0_r = st.number_input("S₀ (Rigid)", 0.30, 0.50, 0.35)
 
@@ -176,16 +166,13 @@ with c2:
     Cd = st.number_input("Cd", 0.7, 1.25, 1.0)
 
 def f_D(D):
-    try:
-        return (
-            ZR_r*S0_r
-            + 7.35*math.log10(D+1) - 0.06
-            + (math.log10(Sc)*Cd)/(1+(1.624e7/((D+1)**8.46)))
-            + 4.22*math.log10(k) - 8.07
-            - math.log10(W18_r)
-        )
-    except:
-        return 999
+    return (
+        ZR_r*S0_r
+        + 7.35*math.log10(D+1) - 0.06
+        + (math.log10(Sc)*Cd)/(1+(1.624e7/((D+1)**8.46)))
+        + 4.22*math.log10(k) - 8.07
+        - math.log10(W18_r)
+    )
 
 def solve_D():
     D = 8
