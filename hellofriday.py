@@ -6,9 +6,13 @@ st.set_page_config(layout="wide")
 st.title("📊 Pavement Design (AASHTO 1993)")
 
 # ------------------------
-# SIDEBAR
+# SIDEBAR (กลับมาแล้ว)
 # ------------------------
+st.sidebar.header("🔧 Input")
+
 mode = st.sidebar.radio("เลือกประเภท", ["Flexible Pavement", "Rigid Pavement"])
+
+SN_required = st.sidebar.number_input("SN Required", value=5.240)
 
 # ========================
 # FLEXIBLE
@@ -17,28 +21,20 @@ if mode == "Flexible Pavement":
 
     st.header("Flexible Pavement")
 
-    # INPUT
-    col1, col2, col3, col4 = st.columns(4)
+    # INPUT จาก sidebar
+    a1 = st.sidebar.number_input("a1 (AC)", value=0.40)
+    m1 = st.sidebar.number_input("m1", value=1.10)
+    d1 = st.sidebar.number_input("AC (cm)", value=20.3)
 
-    with col1:
-        a1 = st.number_input("a1 (AC)", value=0.40)
-        m1 = st.number_input("m1", value=1.10)
-        d1 = st.number_input("AC (cm)", value=20.3)
+    a2 = st.sidebar.number_input("a2 (Base)", value=0.18)
+    m2 = st.sidebar.number_input("m2", value=1.10)
+    d2 = st.sidebar.number_input("Base (cm)", value=22.2)
 
-    with col2:
-        a2 = st.number_input("a2 (Base)", value=0.18)
-        m2 = st.number_input("m2", value=1.10)
-        d2 = st.number_input("Base (cm)", value=22.2)
+    a3 = st.sidebar.number_input("a3 (Subbase)", value=0.13)
+    m3 = st.sidebar.number_input("m3", value=1.10)
+    d3 = st.sidebar.number_input("Subbase (cm)", value=10.2)
 
-    with col3:
-        a3 = st.number_input("a3 (Subbase)", value=0.13)
-        m3 = st.number_input("m3", value=1.10)
-        d3 = st.number_input("Subbase (cm)", value=10.2)
-
-    with col4:
-        d4 = st.number_input("Subgrade Improvement (cm)", value=10.2)
-
-    SN_required = st.number_input("SN Required", value=5.240)
+    d4 = st.sidebar.number_input("Improvement (cm)", value=10.2)
 
     # ------------------------
     # CALC SN
@@ -59,9 +55,8 @@ if mode == "Flexible Pavement":
     st.subheader("📋 ตารางสรุป")
 
     table = {
-        "Layer": ["AC", "Base", "Subbase", "Subgrade Improvement"],
+        "Layer": ["AC", "Base", "Subbase", "Improvement"],
         "Thickness (cm)": [d1, d2, d3, d4],
-        "Thickness (inch)": [d1/2.54, d2/2.54, d3/2.54, d4/2.54],
         "SN": [SN1, SN2, SN3, SN4]
     }
 
@@ -74,7 +69,7 @@ if mode == "Flexible Pavement":
         st.error(f"SN = {SN_total:.3f} < {SN_required} (ไม่ผ่าน)")
 
     # ------------------------
-    # CROSS SECTION (Dynamic)
+    # CROSS SECTION
     # ------------------------
     st.subheader("🏗️ หน้าตัดโครงสร้างทาง")
 
@@ -108,13 +103,11 @@ if mode == "Flexible Pavement":
             + '</div>'
         )
 
-    # Subgrade
     html += (
         '<div style="height:80px;background:#704214;'
         'display:flex;align-items:center;justify-content:center;'
         'color:white;font-weight:bold;">'
-        'Subgrade'
-        '</div>'
+        'Subgrade</div>'
     )
 
     html += '</div></div>'
@@ -128,9 +121,9 @@ if mode == "Rigid Pavement":
 
     st.header("Rigid Pavement")
 
-    d = st.number_input("Concrete Thickness (cm)", value=25.0)
+    d = st.sidebar.number_input("Concrete Thickness (cm)", value=25.0)
 
-    st.success(f"Recommended Thickness = {d:.1f} cm")
+    st.success(f"Thickness = {d:.1f} cm")
 
     st.subheader("🏗️ Cross Section")
 
@@ -156,7 +149,3 @@ if mode == "Rigid Pavement":
     """
 
     st.markdown(html, unsafe_allow_html=True)
-html += '</div>'
-
-# ✅ ตัวนี้ห้ามลืม
-st.markdown(html, unsafe_allow_html=True)
