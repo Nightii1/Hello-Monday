@@ -115,11 +115,11 @@ if road == "Flexible Pavement":
     })
 
     # ------------------------
-    # SECTION (NO MATPLOTLIB)
+    # CROSS SECTION (FIXED)
     # ------------------------
     st.subheader("Cross Section")
 
-    total_thick = d1+d2+d3
+    total_thick = d1 + d2 + d3
     if total_thick == 0:
         total_thick = 1
 
