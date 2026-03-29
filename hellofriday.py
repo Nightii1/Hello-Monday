@@ -335,3 +335,158 @@ st.markdown("""
     <p>⚠️ โปรแกรมนี้เป็นเครื่องมือช่วยคำนวณเบื้องต้น ควรตรวจสอบโดยวิศวกรผู้เชี่ยวชาญก่อนนำไปใช้งานจริง</p>
 </div>
 """, unsafe_allow_html=True)
+# =========================================================
+# 🧱 RIGID PAVEMENT SECTION (ADD ONLY - NO CHANGE ORIGINAL)
+# =========================================================
+
+st.markdown("---")
+st.header("🧱 Rigid Pavement (Concrete) - AASHTO 1993")
+
+# ---------------------------
+# INPUT
+# ---------------------------
+r_col1, r_col2 = st.columns(2)
+
+with r_col1:
+    st.subheader("📊 Traffic")
+
+    rigid_W18 = st.number_input(
+        "ESAL (W18) - Rigid",
+        min_value=1000.0,
+        max_value=100000000.0,
+        value=5000000.0,
+        step=100000.0,
+        format="%.0f",
+        key="r_W18"
+    )
+
+    rigid_R = st.selectbox(
+        "Reliability (%) - Rigid",
+        [50, 60, 70, 75, 80, 85, 90, 95, 99, 99.9],
+        index=6,
+        key="r_R"
+    )
+
+    rigid_ZR_map = {
+        50: 0.000, 60: -0.253, 70: -0.524, 75: -0.674,
+        80: -0.841, 85: -1.037, 90: -1.282,
+        95: -1.645, 99: -2.327, 99.9: -3.090
+    }
+
+    rigid_ZR = rigid_ZR_map[rigid_R]
+    st.info(f"Z_R = {rigid_ZR}")
+
+    rigid_S0 = st.number_input(
+        "Standard Deviation (S₀) - Rigid",
+        min_value=0.30,
+        max_value=0.50,
+        value=0.35,
+        step=0.01,
+        key="r_S0"
+    )
+
+with r_col2:
+    st.subheader("🏗️ Material")
+
+    rigid_k = st.number_input(
+        "Subgrade Reaction (k) pci",
+        min_value=50,
+        max_value=500,
+        value=150,
+        step=10,
+        key="r_k"
+    )
+
+    rigid_Sc = st.number_input(
+        "Flexural Strength (S'c) psi",
+        min_value=400,
+        max_value=1000,
+        value=650,
+        step=10,
+        key="r_Sc"
+    )
+
+    rigid_Cd = st.number_input(
+        "Drainage Coefficient (Cd)",
+        min_value=0.7,
+        max_value=1.25,
+        value=1.0,
+        step=0.05,
+        key="r_Cd"
+    )
+
+    rigid_J = st.number_input(
+        "Load Transfer Coefficient (J)",
+        min_value=2.0,
+        max_value=4.5,
+        value=3.2,
+        step=0.1,
+        key="r_J"
+    )
+
+# ---------------------------
+# FUNCTION (แยกใหม่หมด)
+# ---------------------------
+def rigid_func(D, W18, ZR, S0, Sc, Cd, k):
+    try:
+        return (
+            ZR * S0
+            + 7.35 * math.log10(D + 1)
+            - 0.06
+            + (math.log10(Sc) * Cd) / (1 + (1.624e7 / ((D + 1) ** 8.46)))
+            + 4.22 * math.log10(k)
+            - 8.07
+            - math.log10(W18)
+        )
+    except:
+        return float("inf")
+
+def solve_rigid(W18, ZR, S0, Sc, Cd, k):
+    D = 8.0
+    for _ in range(100):
+        f = rigid_func(D, W18, ZR, S0, Sc, Cd, k)
+
+        h = 0.01
+        df = (rigid_func(D + h, W18, ZR, S0, Sc, Cd, k) - f) / h
+
+        if abs(df) < 1e-6:
+            break
+
+        D_new = D - f / df
+
+        if abs(D_new - D) < 0.001:
+            return D_new
+
+        D = max(D_new, 4)
+
+    return D
+
+# ---------------------------
+# BUTTON
+# ---------------------------
+if st.button("🔢 คำนวณ Rigid Pavement", key="r_btn", use_container_width=True):
+    try:
+        rigid_D = solve_rigid(
+            rigid_W18, rigid_ZR, rigid_S0,
+            rigid_Sc, rigid_Cd, rigid_k
+        )
+
+        st.success("✅ Rigid คำนวณสำเร็จ")
+
+        c1, c2 = st.columns(2)
+
+        with c1:
+            st.metric("Thickness (inch)", f"{rigid_D:.2f}")
+
+        with c2:
+            st.metric("Recommended", f"{math.ceil(rigid_D)} นิ้ว")
+
+        st.info(f"""
+        📌 แนะนำ:
+        - ใช้ความหนา ≈ {math.ceil(rigid_D)} นิ้ว
+        - ตรวจสอบ joint spacing เพิ่ม
+        - ตรวจสอบ dowel / tie bar
+        """)
+
+    except Exception as e:
+        st.error(f"❌ Error: {e}")
