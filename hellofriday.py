@@ -1,153 +1,256 @@
 import streamlit as st
-import math
+import numpy as np
+import matplotlib.pyplot as plt
 
-# ==============================
-# CONFIG
-# ==============================
-st.set_page_config(page_title="Pavement Design", layout="wide")
-st.title("🛣️ Pavement Design (AASHTO 1993)")
+st.set_page_config(layout="wide")
 
-# ==============================
-# SESSION
-# ==============================
-if "SN" not in st.session_state:
-    st.session_state.SN = None
-
-# ==============================
-# INPUT
-# ==============================
-st.header("📊 Flexible Pavement (SN)")
-
-col1, col2 = st.columns(2)
-
-ZR_map = {
-    50: 0.000, 60: -0.253, 70: -0.524, 75: -0.674,
-    80: -0.841, 85: -1.037, 90: -1.282,
-    95: -1.645, 99: -2.327, 99.9: -3.090
+# ------------------------
+# STYLE
+# ------------------------
+st.markdown("""
+<style>
+.metric-box{
+    padding:15px;
+    border-radius:12px;
+    color:white;
+    text-align:center;
+    font-size:20px;
+    font-weight:bold;
 }
+.bg1{background:#1f77b4;}
+.bg2{background:#2ca02c;}
+.bg3{background:#ff7f0e;}
+.bg4{background:#9467bd;}
+</style>
+""", unsafe_allow_html=True)
 
-with col1:
-    W18 = st.number_input("ESAL (W18)", 1000.0, 1e8, 5e6)
-    reliability = st.selectbox("Reliability (%)", list(ZR_map.keys()), index=6)
-    ZR = ZR_map[reliability]
-    S0 = st.number_input("S₀", 0.30, 0.50, 0.45)
+# ------------------------
+# AASHTO FUNCTION
+# ------------------------
+def calc_SN_required(W18, Mr, So, ZR, deltaPSI):
+    SN = 3.0
+    for _ in range(20):
+        term1 = ZR * So
+        term2 = 9.36 * np.log10(SN + 1)
+        term3 = (np.log10(deltaPSI/(4.2-1.5))) / (0.40 + (1094/(SN+1)**5.19))
+        term4 = 2.32 * np.log10(Mr) - 8.07
 
-with col2:
-    MR = st.number_input("M_R (psi)", 1000, 50000, 7500)
-    pi = st.number_input("p_i", 3.0, 5.0, 4.2)
-    pt = st.number_input("p_t", 1.5, 3.0, 2.5)
-
-dpsi = pi - pt
-
-# ==============================
-# SN FUNCTION
-# ==============================
-def f_SN(SN):
-    return (
-        ZR*S0
-        + 9.36*math.log10(SN+1) - 0.20
-        + math.log10(max(dpsi,0.01)) / (0.40 + 1094/((SN+1)**5.19))
-        + 2.32*math.log10(MR) - 8.07
-        - math.log10(W18)
-    )
-
-def solve_SN():
-    SN = 3
-    for _ in range(100):
-        f = f_SN(SN)
-        df = (f_SN(SN+0.001) - f)/0.001
-        if abs(df) < 1e-6:
-            break
-        SN_new = SN - f/df
-        if abs(SN_new - SN) < 1e-4:
-            return SN_new
-        SN = max(SN_new, 0.1)
+        SN = 10 ** ((np.log10(W18) + term1 - term2 - term3 - term4)/9.36)
     return SN
 
-# ==============================
-# CALCULATE SN
-# ==============================
-if st.button("🔢 Calculate SN"):
-    st.session_state.SN = solve_SN()
+# ------------------------
+# SIDEBAR
+# ------------------------
+st.sidebar.title("🚧 AASHTO 1993")
 
-if st.session_state.SN is not None:
-    SN = st.session_state.SN
-    st.success(f"SN = {SN:.2f}")
+road = st.sidebar.radio(
+    "เลือกประเภทผิวทาง",
+    ["Flexible Pavement","Rigid Pavement"]
+)
 
-# ==============================
-# LAYER DESIGN
-# ==============================
-st.markdown("---")
-st.header("🧱 Pavement Layer Design")
+W18 = st.sidebar.number_input("W18 (ESAL)", value=10000000.0, format="%.0f")
+R = st.sidebar.slider("Reliability (%)",50,99,85)
+So = st.sidebar.number_input("Standard Deviation",value=0.45)
+deltaPSI = st.sidebar.number_input("ΔPSI",value=1.7)
+Mr = st.sidebar.number_input("Mr (psi)",value=8000.0)
 
-if st.session_state.SN is not None:
+ZR_table = {
+50:0,60:-0.253,70:-0.524,75:-0.674,
+80:-0.841,85:-1.036,90:-1.282,
+95:-1.645,98:-2.054,99:-2.327
+}
 
-    SN = st.session_state.SN
+ZR = ZR_table.get(R,-1.036)
 
-    colA, colB, colC = st.columns(3)
+# ------------------------
+# FLEXIBLE
+# ------------------------
+if road == "Flexible Pavement":
 
-    with colA:
-        a1 = st.number_input("a1 (Asphalt)", 0.30, 0.50, 0.44)
-        D1 = st.number_input("Asphalt Thickness (inch)", 1.0, 10.0, 3.0)
+    st.title("Flexible Pavement — AASHTO 1993")
 
-    with colB:
-        a2 = st.number_input("a2 (Base)", 0.10, 0.30, 0.14)
-        m2 = st.number_input("m2", 0.5, 1.5, 1.0)
+    SN_req = calc_SN_required(W18, Mr, So, ZR, deltaPSI)
 
-    with colC:
-        a3 = st.number_input("a3 (Subbase)", 0.05, 0.20, 0.11)
-        m3 = st.number_input("m3", 0.5, 1.5, 1.0)
+    st.subheader("Layer Properties")
 
-    # ==============================
-    # CALC
-    # ==============================
-    SN1 = a1 * D1
-    D2 = max((SN - SN1)/(a2*m2), 0)
-    SN2 = a2 * m2 * D2
-    D3 = max((SN - (SN1 + SN2))/(a3*m3), 0)
+    c1,c2,c3,c4,c5 = st.columns(5)
 
-    st.subheader("📊 Result")
-    st.write(f"SN Required = {SN:.2f}")
-    st.write(f"Asphalt = {D1:.2f} in")
-    st.write(f"Base = {D2:.2f} in")
-    st.write(f"Subbase = {D3:.2f} in")
+    with c1:
+        a1=st.number_input("a1",0.0,1.0,0.40)
+        m1=st.number_input("m1",0.0,2.0,1.0)
+        d1=st.number_input("D1 AC (cm)",0.0,100.0,5.0)
 
-    # ==============================
-    # SECTION (FIXED)
-    # ==============================
-    st.subheader("🧱 Pavement Section")
+    with c2:
+        a2=st.number_input("a2",0.0,1.0,0.18)
+        m2=st.number_input("m2",0.0,2.0,1.1)
+        d2=st.number_input("D2 Base (cm)",0.0,100.0,20.0)
 
-    total = D1 + D2 + D3
-    if total == 0:
-        total = 1
+    with c3:
+        a3=st.number_input("a3",0.0,1.0,0.13)
+        m3=st.number_input("m3",0.0,2.0,1.1)
+        d3=st.number_input("D3 Subbase (cm)",0.0,100.0,25.0)
 
-    scale = 300 / total
+    with c4:
+        a4=st.number_input("a4",0.0,1.0,0.0)
+        m4=st.number_input("m4",0.0,2.0,1.0)
+        d4=st.number_input("D4 (cm)",0.0,100.0,0.0)
 
-    h1 = D1 * scale
-    h2 = D2 * scale
-    h3 = D3 * scale
+    with c5:
+        a5=st.number_input("a5",0.0,1.0,0.0)
+        m5=st.number_input("m5",0.0,2.0,1.0)
+        d5=st.number_input("D5 (cm)",0.0,100.0,0.0)
 
-    html = f"""
-    <div style="width:250px;margin:auto;text-align:center;">
+    SN1=a1*m1*(d1/2.54)
+    SN2=SN1+a2*m2*(d2/2.54)
+    SN3=SN2+a3*m3*(d3/2.54)
+    SN4=SN3+a4*m4*(d4/2.54)
+    SN5=SN4+a5*m5*(d5/2.54)
 
-        <div style="height:{h1}px;background:#222;border:2px solid black;color:white;
-        display:flex;align-items:center;justify-content:center;">
-        Asphalt {D1:.1f} in</div>
+    total = d1+d2+d3+d4+d5
 
-        <div style="height:{h2}px;background:#c2b280;border:2px solid black;
-        display:flex;align-items:center;justify-content:center;">
-        Base {D2:.1f} in</div>
+    col1,col2,col3,col4 = st.columns(4)
 
-        <div style="height:{h3}px;background:#8fbc8f;border:2px solid black;
-        display:flex;align-items:center;justify-content:center;">
-        Subbase {D3:.1f} in</div>
+    col1.markdown(f'<div class="metric-box bg1">SN Required<br>{SN_req:.3f}</div>',unsafe_allow_html=True)
+    col2.markdown(f'<div class="metric-box bg2">SN Provided<br>{SN5:.3f}</div>',unsafe_allow_html=True)
+    col3.markdown(f'<div class="metric-box bg3">Total Thickness<br>{total:.1f} cm</div>',unsafe_allow_html=True)
+    col4.markdown(f'<div class="metric-box bg4">W18<br>{W18:,.0f}</div>',unsafe_allow_html=True)
 
-        <div style="height:50px;background:#d3d3d3;border:2px solid black;
-        display:flex;align-items:center;justify-content:center;">
-        Subgrade</div>
+    if SN5 >= SN_req:
+        st.success("ผ่าน")
+    else:
+        st.error("ไม่ผ่าน")
 
-    </div>
-    """
+    st.subheader("Summary")
 
-    # 🔥 สำคัญที่สุด
-    st.markdown(html, unsafe_allow_html=True)
+    st.table({
+        "Layer":["AC","Base","Subbase","Layer4","Layer5"],
+        "Thickness (cm)":[d1,d2,d3,d4,d5],
+        "SN":[SN1,SN2,SN3,SN4,SN5]
+    })
+
+    # CROSS SECTION (แก้เฉพาะลำดับ)
+    st.subheader("Cross Section")
+
+    fig, ax = plt.subplots(figsize=(3,6))
+
+    layers = [d1,d2,d3,d4,d5]
+    labels = ["D1","D2","D3","D4","D5"]
+    names  = ["AC","Base","Subbase","Layer4","Layer5"]
+    colors = ["#333333","#8c8c8c","#87CEEB","#f4a261","#2a9d8f"]
+
+    bottom = 0
+
+    for i in reversed(range(len(layers))):
+        if layers[i] > 0:
+            ax.bar(0, layers[i], bottom=bottom, color=colors[i])
+            ax.text(
+                0,
+                bottom + layers[i]/2,
+                f"{names[i]}\n{labels[i]} = {layers[i]:.1f} cm",
+                ha='center',
+                va='center',
+                color='white' if i==0 else 'black'
+            )
+            bottom += layers[i]
+
+    ax.set_xlim(-1,1)
+    ax.set_xticks([])
+    ax.set_ylabel("Thickness (cm)")
+    ax.set_title("Flexible Pavement Section")
+
+    st.pyplot(fig)
+
+# ------------------------
+# RIGID
+# ------------------------
+if road == "Rigid Pavement":
+
+    st.title("Rigid Pavement — AASHTO 1993")
+
+    st.subheader("Layer Properties")
+
+    c1,c2,c3,c4,c5 = st.columns(5)
+
+    with c1:
+        a1=st.number_input("a1",0.0,2.0,1.0,key="ra1")
+        m1=st.number_input("m1",0.0,2.0,1.0,key="rm1")
+        d1=st.number_input("D1 Concrete (cm)",0.0,100.0,25.0)
+
+    with c2:
+        a2=st.number_input("a2",0.0,1.0,0.14,key="ra2")
+        m2=st.number_input("m2",0.0,2.0,1.0,key="rm2")
+        d2=st.number_input("D2 Base (cm)",0.0,100.0,10.0)
+
+    with c3:
+        a3=st.number_input("a3",0.0,1.0,0.11,key="ra3")
+        m3=st.number_input("m3",0.0,2.0,1.0,key="rm3")
+        d3=st.number_input("D3 Subbase (cm)",0.0,100.0,15.0)
+
+    with c4:
+        a4=st.number_input("a4",0.0,1.0,0.0,key="ra4")
+        m4=st.number_input("m4",0.0,2.0,1.0,key="rm4")
+        d4=st.number_input("D4 (cm)",0.0,100.0,0.0)
+
+    with c5:
+        a5=st.number_input("a5",0.0,1.0,0.0,key="ra5")
+        m5=st.number_input("m5",0.0,2.0,1.0,key="rm5")
+        d5=st.number_input("D5 (cm)",0.0,100.0,0.0)
+
+    SN1=a1*m1*(d1/2.54)
+    SN2=SN1+a2*m2*(d2/2.54)
+    SN3=SN2+a3*m3*(d3/2.54)
+    SN4=SN3+a4*m4*(d4/2.54)
+    SN5=SN4+a5*m5*(d5/2.54)
+
+    total = d1+d2+d3+d4+d5
+    SN_req = (np.log10(W18)+1)*3
+
+    col1,col2,col3,col4 = st.columns(4)
+
+    col1.markdown(f'<div class="metric-box bg1">Required<br>{SN_req:.3f}</div>',unsafe_allow_html=True)
+    col2.markdown(f'<div class="metric-box bg2">Provided<br>{SN5:.3f}</div>',unsafe_allow_html=True)
+    col3.markdown(f'<div class="metric-box bg3">Total Thickness<br>{total:.1f} cm</div>',unsafe_allow_html=True)
+    col4.markdown(f'<div class="metric-box bg4">W18<br>{W18:,.0f}</div>',unsafe_allow_html=True)
+
+    if SN5 >= SN_req:
+        st.success("ผ่าน")
+    else:
+        st.error("ไม่ผ่าน")
+
+    st.subheader("Summary")
+
+    st.table({
+        "Layer":["Concrete","Base","Subbase","Layer4","Layer5"],
+        "Thickness (cm)":[d1,d2,d3,d4,d5],
+        "SN":[SN1,SN2,SN3,SN4,SN5]
+    })
+
+    st.subheader("Cross Section")
+
+    fig, ax = plt.subplots(figsize=(3,6))
+
+    layers = [d1,d2,d3,d4,d5]
+    labels = ["D1","D2","D3","D4","D5"]
+    names  = ["Concrete","Base","Subbase","Layer4","Layer5"]
+    colors = ["#dddddd","#bbbbbb","#87CEEB","#f4a261","#2a9d8f"]
+
+    bottom = 0
+
+    for i in reversed(range(len(layers))):
+        if layers[i] > 0:
+            ax.bar(0, layers[i], bottom=bottom, color=colors[i])
+            ax.text(
+                0,
+                bottom + layers[i]/2,
+                f"{names[i]}\n{labels[i]} = {layers[i]:.1f} cm",
+                ha='center',
+                va='center'
+            )
+            bottom += layers[i]
+
+    ax.set_xlim(-1,1)
+    ax.set_xticks([])
+    ax.set_ylabel("Thickness (cm)")
+    ax.set_title("Rigid Pavement Section")
+
+    st.pyplot(fig)
