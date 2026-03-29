@@ -139,9 +139,8 @@ if road == "Rigid Pavement":
     st.progress(0.3)
 
 # ========================
-# SUMMARY + SECTION (แก้ HTML)
+# SUMMARY + SECTION
 # ========================
-
 st.title("📊 สรุปผลการออกแบบ (ชั้นทาง)")
 
 SN_required = 5.240
@@ -184,7 +183,7 @@ else:
     st.error(f"SN = {SN_total:.3f} < {SN_required} (ไม่ผ่าน)")
 
 # ------------------------
-# SECTION (HTML FIX)
+# 🔥 FIX SECTION (สำคัญ)
 # ------------------------
 st.subheader("🏗️ หน้าตัดโครงสร้างทาง")
 
@@ -200,33 +199,24 @@ html = '<div style="width:300px;margin:auto;border:2px solid #ccc;">'
 
 for i, layer in enumerate(layers):
     h = layer["D_cm"] * scale
-    html += f'''
-    <div style="
-        height:{h}px;
-        background:{colors[i]};
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        color:white;
-        font-weight:bold;">
-        {layer["D_cm"]:.1f} cm
-    </div>
-    '''
 
-html += '''
-<div style="
-    height:80px;
-    background:#704214;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:white;
-    font-weight:bold;">
-    Subgrade
-</div>
-'''
+    html += (
+        '<div style="height:' + str(h) + 'px;'
+        'background:' + colors[i] + ';'
+        'display:flex;align-items:center;justify-content:center;'
+        'color:white;font-weight:bold;">'
+        + f'{layer["D_cm"]:.1f} cm'
+        + '</div>'
+    )
+
+html += (
+    '<div style="height:80px;background:#704214;'
+    'display:flex;align-items:center;justify-content:center;'
+    'color:white;font-weight:bold;">'
+    'Subgrade</div>'
+)
 
 html += '</div>'
 
-# 🔥 จุดสำคัญที่แก้
+# ✅ ตัวนี้ห้ามลืม
 st.markdown(html, unsafe_allow_html=True)
