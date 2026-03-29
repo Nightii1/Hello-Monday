@@ -13,13 +13,13 @@ st.set_page_config(
 st.title("🛣️ Pavement Design (AASHTO 1993)")
 
 # ==============================
-# SESSION STATE
+# SESSION
 # ==============================
 if "SN" not in st.session_state:
     st.session_state.SN = None
 
 # ==============================
-# INPUT (SN)
+# INPUT SN
 # ==============================
 st.header("📊 Flexible Pavement (SN)")
 
@@ -76,7 +76,7 @@ def solve_SN():
     return SN
 
 # ==============================
-# BUTTON SN
+# CALCULATE SN
 # ==============================
 if st.button("🔢 Calculate SN"):
     st.session_state.SN = solve_SN()
@@ -109,12 +109,15 @@ if st.session_state.SN is not None:
         a3 = st.number_input("a3 (Subbase)", 0.05, 0.20, 0.11)
         m3 = st.number_input("m3", 0.5, 1.5, 1.0)
 
-    st.markdown("### 📊 Result")
-
+    # ==============================
+    # CALC LAYERS
+    # ==============================
     SN1 = a1 * D1
     D2 = max((SN - SN1) / (a2 * m2), 0)
     SN2 = a2 * m2 * D2
     D3 = max((SN - (SN1 + SN2)) / (a3 * m3), 0)
+
+    st.subheader("📊 Result")
 
     st.write(f"SN Required = {SN:.2f}")
     st.write(f"Asphalt = {D1:.2f} in")
@@ -122,26 +125,38 @@ if st.session_state.SN is not None:
     st.write(f"Subbase = {D3:.2f} in")
 
     # ==============================
-    # SECTION (HTML)
+    # PROFESSIONAL SECTION
     # ==============================
     st.subheader("🧱 Pavement Section")
 
-    scale = 10
+    total = D1 + D2 + D3
+    if total == 0:
+        total = 1
+
+    scale = 300 / total
+
+    h1 = D1 * scale
+    h2 = D2 * scale
+    h3 = D3 * scale
 
     st.markdown(f"""
-    <div style="width:200px; margin:auto; text-align:center;">
-        
-        <div style="background:#333;color:white;">Asphalt ({D1:.1f} in)</div>
-        <div style="height:{D1*scale}px;background:#333;"></div>
+    <div style="width:300px; margin:auto; font-family:sans-serif;">
 
-        <div style="background:#c2b280;">Base ({D2:.1f} in)</div>
-        <div style="height:{D2*scale}px;background:#c2b280;"></div>
+        <div style="height:{h1}px;background:#2b2b2b;border:2px solid black;
+        display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;">
+        Asphalt {D1:.1f} in</div>
 
-        <div style="background:#8fbc8f;">Subbase ({D3:.1f} in)</div>
-        <div style="height:{D3*scale}px;background:#8fbc8f;"></div>
+        <div style="height:{h2}px;background:#c2b280;border:2px solid black;
+        display:flex;align-items:center;justify-content:center;font-weight:bold;">
+        Base {D2:.1f} in</div>
 
-        <div style="background:#d3d3d3;">Subgrade</div>
-        <div style="height:40px;background:#d3d3d3;"></div>
+        <div style="height:{h3}px;background:#8fbc8f;border:2px solid black;
+        display:flex;align-items:center;justify-content:center;font-weight:bold;">
+        Subbase {D3:.1f} in</div>
+
+        <div style="height:60px;background:#d3d3d3;border:2px solid black;
+        display:flex;align-items:center;justify-content:center;font-weight:bold;">
+        Subgrade</div>
 
     </div>
     """, unsafe_allow_html=True)
