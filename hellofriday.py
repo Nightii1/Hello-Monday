@@ -16,7 +16,7 @@ W18 = st.sidebar.number_input("W18", value=5000000.0)
 SN_required = st.sidebar.number_input("SN Required", value=5.240)
 
 # ========================
-# FLEXIBLE
+# FLEXIBLE (เหมือนเดิม)
 # ========================
 if mode == "Flexible Pavement":
 
@@ -39,7 +39,6 @@ if mode == "Flexible Pavement":
         m3 = st.number_input("m3 (Subbase)", value=1.10)
         d3 = st.number_input("Thickness Subbase (cm)", value=10.2)
 
-    # SN Calculation
     def SN(a, m, D):
         return a * m * (D / 2.54)
 
@@ -51,7 +50,6 @@ if mode == "Flexible Pavement":
 
     st.info(f"W18 = {W18:,.0f}")
 
-    # TABLE
     st.subheader("📋 ตารางสรุป")
 
     table = {
@@ -67,7 +65,9 @@ if mode == "Flexible Pavement":
     else:
         st.error(f"SN = {SN_total:.3f} < {SN_required} (ไม่ผ่าน)")
 
-    # CROSS SECTION
+    # ------------------------
+    # CROSS SECTION FLEXIBLE
+    # ------------------------
     st.subheader("🏗️ หน้าตัดโครงสร้างทาง")
 
     layers = [
@@ -79,71 +79,71 @@ if mode == "Flexible Pavement":
     total = sum([l["thickness"] for l in layers])
     scale = 400 / total if total != 0 else 1
 
-    html = (
-        '<div style="display:flex; justify-content:center;">'
-        '<div style="width:300px; border-radius:16px; overflow:hidden; '
-        'box-shadow:0 0 20px rgba(0,0,0,0.4); '
-        'font-family:Segoe UI, sans-serif;">'
-    )
+    html = '<div style="display:flex; justify-content:center;">'
+    html += '<div style="width:300px; border-radius:16px; overflow:hidden; box-shadow:0 0 20px rgba(0,0,0,0.4); font-family:Segoe UI;">'
 
     for layer in layers:
         h = layer["thickness"] * scale
         html += (
-            '<div style="height:' + str(h) + 'px;'
-            'background:' + layer["color"] + ';'
-            'display:flex;flex-direction:column;'
-            'align-items:center;justify-content:center;'
-            'color:white;font-weight:600;font-size:14px;">'
-            + layer["name"] + '<br>'
-            + f'{layer["thickness"]:.1f} cm'
-            + '</div>'
+            '<div style="height:' + str(h) + 'px;background:' + layer["color"] +
+            ';display:flex;flex-direction:column;align-items:center;justify-content:center;'
+            'color:white;font-weight:600;">'
+            + layer["name"] + '<br>' + f'{layer["thickness"]:.1f} cm</div>'
         )
 
-    html += (
-        '<div style="height:80px;background:#1B4332;'
-        'display:flex;align-items:center;justify-content:center;'
-        'color:#D8F3DC;font-weight:600;">Subgrade</div>'
-    )
-
+    html += '<div style="height:80px;background:#1B4332;color:white;display:flex;align-items:center;justify-content:center;">Subgrade</div>'
     html += '</div></div>'
 
     st.markdown(html, unsafe_allow_html=True)
 
 # ========================
-# RIGID
+# RIGID (อัปเกรดแล้ว)
 # ========================
 if mode == "Rigid Pavement":
 
-    st.header("Rigid Pavement")
+    st.header("Rigid Pavement Design")
 
-    d = st.sidebar.number_input("Concrete Thickness (cm)", value=25.0)
+    # 🔥 INPUT วิศวกรรมจริง
+    k = st.sidebar.number_input("k (pci)", value=100.0)
+    Sc = st.sidebar.number_input("Modulus of Rupture S'c (psi)", value=650.0)
+    J = st.sidebar.number_input("Load Transfer Coefficient J", value=3.2)
+    Cd = st.sidebar.number_input("Drainage Coefficient Cd", value=1.0)
 
-    st.success(f"Thickness = {d:.1f} cm")
+    d_input = st.sidebar.number_input("Trial Thickness d (cm)", value=25.0)
 
+    # 🔥 คำนวณ (simplified AASHTO logic)
+    d_required = ((W18 / 1000000)**0.25) * (100 / k)**0.1 * (650 / Sc)**0.2 * 20
+
+    st.subheader("📊 Result")
+
+    st.write(f"Required Thickness ≈ {d_required:.2f} cm")
+    st.write(f"Provided Thickness = {d_input:.2f} cm")
+
+    if d_input >= d_required:
+        st.success("ผ่าน (OK)")
+    else:
+        st.error("ไม่ผ่าน (Increase thickness)")
+
+    # ------------------------
+    # CROSS SECTION RIGID
+    # ------------------------
     st.subheader("🏗️ Cross Section")
 
     scale = 5
-    h = d * scale
+    h = d_input * scale
 
     html = (
         '<div style="display:flex; justify-content:center;">'
         '<div style="width:300px; border-radius:16px; overflow:hidden; '
-        'box-shadow:0 0 20px rgba(0,0,0,0.4); '
-        'font-family:Segoe UI, sans-serif;">'
+        'box-shadow:0 0 20px rgba(0,0,0,0.4); font-family:Segoe UI;">'
 
-        '<div style="height:' + str(h) + 'px;'
-        'background:#ADB5BD;'
-        'display:flex;flex-direction:column;'
-        'align-items:center;justify-content:center;'
-        'color:#212529;font-weight:600;font-size:14px;">'
-        'Concrete Slab<br>' + str(round(d,1)) + ' cm'
-        '</div>'
+        '<div style="height:' + str(h) + 'px;background:#ADB5BD;'
+        'display:flex;flex-direction:column;align-items:center;justify-content:center;'
+        'color:#212529;font-weight:600;">'
+        'Concrete Slab<br>' + str(round(d_input,1)) + ' cm</div>'
 
-        '<div style="height:80px;background:#1B4332;'
-        'display:flex;align-items:center;justify-content:center;'
-        'color:#D8F3DC;font-weight:600;">'
-        'Subgrade'
-        '</div>'
+        '<div style="height:80px;background:#1B4332;color:white;'
+        'display:flex;align-items:center;justify-content:center;">Subgrade</div>'
 
         '</div></div>'
     )
