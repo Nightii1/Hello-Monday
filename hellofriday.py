@@ -12,8 +12,8 @@ st.sidebar.header("🔧 Input")
 
 mode = st.sidebar.radio("เลือกประเภท", ["Flexible Pavement", "Rigid Pavement"])
 
-# 👉 เพิ่ม W18 กลับมาแล้ว
 W18 = st.sidebar.number_input("W18", value=5000000.0)
+SN_required = st.sidebar.number_input("SN Required", value=5.240)
 
 # ========================
 # FLEXIBLE
@@ -22,7 +22,6 @@ if mode == "Flexible Pavement":
 
     st.header("Flexible Pavement")
 
-    # INPUT
     a1 = st.sidebar.number_input("a1 (AC)", value=0.40)
     m1 = st.sidebar.number_input("m1", value=1.10)
     d1 = st.sidebar.number_input("AC (cm)", value=20.3)
@@ -37,11 +36,6 @@ if mode == "Flexible Pavement":
 
     d4 = st.sidebar.number_input("Improvement (cm)", value=10.2)
 
-    SN_required = st.sidebar.number_input("SN Required", value=5.240)
-
-    # ------------------------
-    # CALC SN
-    # ------------------------
     def SN(a, m, D):
         return a * m * (D / 2.54)
 
@@ -52,33 +46,25 @@ if mode == "Flexible Pavement":
 
     SN_total = SN1 + SN2 + SN3 + SN4
 
-    # ------------------------
-    # SHOW W18
-    # ------------------------
     st.info(f"W18 = {W18:,.0f}")
 
-    # ------------------------
-    # TABLE
-    # ------------------------
     st.subheader("📋 ตารางสรุป")
 
     table = {
         "Layer": ["AC", "Base (CTBAC)", "Subbase", "Improvement"],
         "Thickness (cm)": [d1, d2, d3, d4],
-        "Thickness (inch)": [d1/2.54, d2/2.54, d3/2.54, d4/2.54],
         "SN": [SN1, SN2, SN3, SN4]
     }
 
     st.dataframe(table, use_container_width=True)
 
-    # RESULT
     if SN_total >= SN_required:
         st.success(f"SN = {SN_total:.3f} ≥ {SN_required} (ผ่าน)")
     else:
         st.error(f"SN = {SN_total:.3f} < {SN_required} (ไม่ผ่าน)")
 
     # ------------------------
-    # CROSS SECTION (Dynamic + แยกชั้น)
+    # CROSS SECTION
     # ------------------------
     st.subheader("🏗️ หน้าตัดโครงสร้างทาง")
 
@@ -112,7 +98,6 @@ if mode == "Flexible Pavement":
             + '</div>'
         )
 
-    # Subgrade
     html += (
         '<div style="height:80px;background:#704214;'
         'display:flex;align-items:center;justify-content:center;'
@@ -137,26 +122,27 @@ if mode == "Rigid Pavement":
 
     st.subheader("🏗️ Cross Section")
 
-    html = f"""
-    <div style="display:flex; justify-content:center;">
-        <div style="width:280px; border:2px solid #ccc;">
+    scale = 5
+    h = d * scale
 
-            <div style="height:200px;background:#dddddd;
-            display:flex;flex-direction:column;
-            align-items:center;justify-content:center;
-            font-weight:bold;">
-            Concrete<br>{d:.1f} cm
-            </div>
+    html = (
+        '<div style="display:flex; justify-content:center;">'
+        '<div style="width:280px; border:2px solid #ccc;">'
 
-            <div style="height:80px;background:#704214;
-            display:flex;align-items:center;justify-content:center;
-            color:white;font-weight:bold;">
-            Subgrade
-            </div>
+        '<div style="height:' + str(h) + 'px;'
+        'background:#dddddd;'
+        'display:flex; flex-direction:column;'
+        'align-items:center; justify-content:center;'
+        'font-weight:bold;">'
+        'Concrete<br>' + str(round(d,1)) + ' cm'
+        '</div>'
 
-        </div>
-    </div>
-    """
+        '<div style="height:80px;background:#704214;'
+        'display:flex;align-items:center;justify-content:center;'
+        'color:white;font-weight:bold;">'
+        'Subgrade</div>'
 
-    st.markdown(html, unsafe_allow_html=True)
+        '</div></div>'
+    )
+
     st.markdown(html, unsafe_allow_html=True)
