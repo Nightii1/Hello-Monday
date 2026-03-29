@@ -35,7 +35,6 @@ with tab1:
 
         st.sidebar.markdown("## 🧱 Layer Configuration")
 
-        # 🔥 FIX expander (สำคัญ)
         with st.sidebar.expander("Layer 1: Asphalt (AC)", expanded=True):
             a1 = st.number_input("a1", value=0.40)
             m1 = st.number_input("m1", value=1.10)
@@ -126,37 +125,34 @@ with tab1:
         """, unsafe_allow_html=True)
 
 # =========================================================
-# TAB 2 = THEORY (🔥 ครบ)
+# TAB 2 = THEORY (🔥 แก้เฉพาะสูตรตรงนี้)
 # =========================================================
 with tab2:
 
     st.header("📘 ทฤษฎีและสูตร AASHTO 1993")
 
-    st.subheader("Flexible Pavement")
-
-    st.latex(r"SN = a_1D_1m_1 + a_2D_2m_2 + a_3D_3m_3")
-
-    st.markdown("""
-    **ตัวแปร:**
-    - SN = Structural Number  
-    - aᵢ = Layer coefficient  
-    - Dᵢ = Thickness (inch)  
-    - mᵢ = Drainage factor  
-    """)
-
-    st.subheader("Rigid Pavement")
+    st.subheader("Flexible Pavement Design Equation")
 
     st.latex(r"""
-    \log_{10}(W_{18}) = Z_RS_o + 7.35\log_{10}(D+1)
+    \log_{10}(W_{18}) = Z_R S_o + 9.36\log_{10}(SN+1) - 0.20
+    + \frac{\log_{10}\left(\frac{\Delta PSI}{4.2-1.5}\right)}
+    {0.40 + \frac{1094}{(SN+1)^{5.19}}}
+    + 2.32\log_{10}(M_R) - 8.07
     """)
 
     st.markdown("""
     **ตัวแปร:**
     - W18 = ESAL  
-    - D = Thickness  
-    - k = Subgrade modulus  
-    - Sc = Modulus of rupture  
+    - SN = Structural Number  
+    - MR = Resilient Modulus (psi)  
+    - ΔPSI = Serviceability loss  
+    - ZR = Reliability factor  
+    - So = Standard deviation  
     """)
+
+    st.subheader("Rigid Pavement")
+
+    st.latex(r"\log_{10}(W_{18}) = Z_RS_o + 7.35\log_{10}(D+1)")
 
 # =========================================================
 # TAB 3 = SENSITIVITY
