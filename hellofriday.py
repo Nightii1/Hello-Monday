@@ -6,148 +6,140 @@ st.set_page_config(layout="wide")
 st.title("📊 Pavement Design (AASHTO 1993)")
 
 # ------------------------
-# SIDEBAR
+# TABS (🔥 เพิ่มตรงนี้)
 # ------------------------
-st.sidebar.header("🔧 Input")
-
-mode = st.sidebar.radio("เลือกประเภท", ["Flexible Pavement", "Rigid Pavement"])
-
-W18 = st.sidebar.number_input("W18", value=5000000.0)
-SN_required = st.sidebar.number_input("SN Required", value=5.240)
+tab1, tab2 = st.tabs(["📊 ผลการออกแบบ", "ℹ️ ทฤษฎีและสูตร"])
 
 # ========================
-# FLEXIBLE (เหมือนเดิม)
+# TAB 1 = ของเดิมทั้งหมด
 # ========================
-if mode == "Flexible Pavement":
+with tab1:
 
-    st.header("Flexible Pavement")
+    # ------------------------
+    # SIDEBAR
+    # ------------------------
+    st.sidebar.header("🔧 Input")
 
-    st.sidebar.markdown("## 🧱 Layer Configuration")
+    mode = st.sidebar.radio("เลือกประเภท", ["Flexible Pavement", "Rigid Pavement"])
 
-    with st.sidebar.expander("Layer 1: Asphalt (AC)", expanded=True):
-        a1 = st.number_input("a1 (AC)", value=0.40)
-        m1 = st.number_input("m1 (AC)", value=1.10)
-        d1 = st.number_input("Thickness AC (cm)", value=20.3)
+    W18 = st.sidebar.number_input("W18", value=5000000.0)
+    SN_required = st.sidebar.number_input("SN Required", value=5.240)
 
-    with st.sidebar.expander("Layer 2: Base (CTBAC)"):
-        a2 = st.number_input("a2 (Base)", value=0.18)
-        m2 = st.number_input("m2 (Base)", value=1.10)
-        d2 = st.number_input("Thickness Base (cm)", value=22.2)
+    # ========================
+    # FLEXIBLE
+    # ========================
+    if mode == "Flexible Pavement":
 
-    with st.sidebar.expander("Layer 3: Subbase"):
-        a3 = st.number_input("a3 (Subbase)", value=0.13)
-        m3 = st.number_input("m3 (Subbase)", value=1.10)
-        d3 = st.number_input("Thickness Subbase (cm)", value=10.2)
+        st.header("Flexible Pavement")
 
-    def SN(a, m, D):
-        return a * m * (D / 2.54)
+        st.sidebar.markdown("## 🧱 Layer Configuration")
 
-    SN_total = SN(a1, m1, d1) + SN(a2, m2, d2) + SN(a3, m3, d3)
+        with st.sidebar.expander("Layer 1: Asphalt (AC)", expanded=True):
+            a1 = st.number_input("a1 (AC)", value=0.40)
+            m1 = st.number_input("m1 (AC)", value=1.10)
+            d1 = st.number_input("Thickness AC (cm)", value=20.3)
 
-    st.info(f"W18 = {W18:,.0f}")
+        with st.sidebar.expander("Layer 2: Base (CTBAC)"):
+            a2 = st.number_input("a2 (Base)", value=0.18)
+            m2 = st.number_input("m2 (Base)", value=1.10)
+            d2 = st.number_input("Thickness Base (cm)", value=22.2)
 
-    if SN_total >= SN_required:
-        st.success(f"SN = {SN_total:.3f} ≥ {SN_required}")
-    else:
-        st.error(f"SN = {SN_total:.3f} < {SN_required}")
+        with st.sidebar.expander("Layer 3: Subbase"):
+            a3 = st.number_input("a3 (Subbase)", value=0.13)
+            m3 = st.number_input("m3 (Subbase)", value=1.10)
+            d3 = st.number_input("Thickness Subbase (cm)", value=10.2)
 
-    # Cross Section
-    st.subheader("🏗️ หน้าตัดโครงสร้างทาง")
+        def SN(a, m, D):
+            return a * m * (D / 2.54)
 
-    layers = [
-        {"name": "AC", "thickness": d1, "color": "#2B2D42"},
-        {"name": "Base (CTBAC)", "thickness": d2, "color": "#3A86FF"},
-        {"name": "Subbase", "thickness": d3, "color": "#8338EC"},
-    ]
+        SN_total = SN(a1, m1, d1) + SN(a2, m2, d2) + SN(a3, m3, d3)
 
-    total = sum([l["thickness"] for l in layers])
-    scale = 400 / total if total != 0 else 1
+        st.info(f"W18 = {W18:,.0f}")
 
-    html = '<div style="display:flex; justify-content:center;">'
-    html += '<div style="width:300px; border-radius:16px; overflow:hidden; box-shadow:0 0 20px rgba(0,0,0,0.4); font-family:Segoe UI;">'
+        if SN_total >= SN_required:
+            st.success(f"SN = {SN_total:.3f} ≥ {SN_required}")
+        else:
+            st.error(f"SN = {SN_total:.3f} < {SN_required}")
 
-    for layer in layers:
-        h = layer["thickness"] * scale
-        html += (
-            '<div style="height:' + str(h) + 'px;background:' + layer["color"] +
-            ';display:flex;align-items:center;justify-content:center;color:white;font-weight:600;">'
-            + layer["name"] + '<br>' + f'{layer["thickness"]:.1f} cm</div>'
-        )
+    # ========================
+    # RIGID
+    # ========================
+    if mode == "Rigid Pavement":
 
-    html += '<div style="height:80px;background:#1B4332;color:white;display:flex;align-items:center;justify-content:center;">Subgrade</div>'
-    html += '</div></div>'
+        st.header("Rigid Pavement (Improved)")
 
-    st.markdown(html, unsafe_allow_html=True)
+        k = st.sidebar.number_input("Subgrade k (pci)", value=50.0)
+        k_base = st.sidebar.number_input("Base improvement (pci)", value=50.0)
+        base_thickness = st.sidebar.number_input("Base thickness (cm)", value=15.0)
+
+        Sc = st.sidebar.number_input("S'c (psi)", value=650.0)
+        J = st.sidebar.number_input("J", value=3.2)
+        Cd = st.sidebar.number_input("Cd", value=1.0)
+
+        k_effective = k + k_base
+
+        def calc_d():
+            d = ((W18 / 1e6)**0.25) * (100 / k_effective)**0.1 * (650 / Sc)**0.2 * 8
+            return max(d, 5)
+
+        d_in = calc_d()
+        d_cm = d_in * 2.54
+
+        st.subheader("📊 Result")
+        st.write(f"Concrete Thickness = {d_cm:.2f} cm")
+
+        # Design Check
+        st.subheader("✅ Design Check")
+
+        W18_capacity = (d_cm / 20)**4 * 1_000_000
+        ratio = W18_capacity / W18
+
+        if ratio >= 1:
+            st.success(f"✔️ D = {d_cm:.0f} cm รับ W18 (Ratio = {ratio:.3f})")
+        else:
+            st.error(f"❌ ไม่ผ่าน (Ratio = {ratio:.3f})")
 
 # ========================
-# RIGID (🔥 อัปเกรดครบ)
+# TAB 2 = 🔥 ทฤษฎีและสูตร
 # ========================
-if mode == "Rigid Pavement":
+with tab2:
 
-    st.header("Rigid Pavement (Improved)")
+    st.header("ℹ️ ทฤษฎีและสูตร AASHTO 1993")
 
-    # INPUT
-    k = st.sidebar.number_input("Subgrade k (pci)", value=50.0)
-    k_base = st.sidebar.number_input("Base improvement (pci)", value=50.0)
-    base_thickness = st.sidebar.number_input("Base thickness (cm)", value=15.0)
+    st.markdown("""
+    ### 📘 Rigid Pavement Design Equation
 
-    Sc = st.sidebar.number_input("S'c (psi)", value=650.0)
-    J = st.sidebar.number_input("J", value=3.2)
-    Cd = st.sidebar.number_input("Cd", value=1.0)
+    log(W18) = ZR·So + 7.35·log(D+1) − 0.06  
+    + log(ΔPSI / (4.5 − 1.5)) / [1 + 1.624×10⁷ / (D+1)⁸·⁴⁶]  
+    + (4.22 − 0.32·pt) × log[Sc·Cd·(D⁰·⁷⁵ − 1.132) / (215.63·J·(D⁰·⁷⁵ − 18.42 / (Ec/k)⁰·²⁵))]
 
-    # Effective k
-    k_effective = k + k_base
+    ---
+    """)
 
-    # Solver (กัน 0)
-    def calc_d():
-        d = ((W18 / 1e6)**0.25) * (100 / k_effective)**0.1 * (650 / Sc)**0.2 * 8
-        return max(d, 5)
+    col1, col2 = st.columns(2)
 
-    d_in = calc_d()
-    d_cm = d_in * 2.54
+    with col1:
+        st.markdown("""
+        ### 🔧 ตัวแปร
 
-    # ------------------------
-    # RESULT
-    # ------------------------
-    st.subheader("📊 Result")
+        - D = ความหนาแผ่น (inch)  
+        - Sc = Modulus of Rupture  
+        - Ec = Elastic Modulus  
+        - k = Subgrade Reaction  
+        - J = Load Transfer  
+        - Cd = Drainage Coefficient  
+        """)
 
-    st.write(f"Concrete Thickness = {d_cm:.2f} cm")
-    st.write(f"Effective k = {k_effective:.1f} pci")
+    with col2:
+        st.markdown("""
+        ### 📋 ขั้นตอนออกแบบ
 
-    # ------------------------
-    # ✅ DESIGN CHECK (แบบที่คุณต้องการ)
-    # ------------------------
-    st.subheader("✅ Design Check")
+        1. กำหนด W18  
+        2. เลือก Reliability  
+        3. กำหนด ΔPSI  
+        4. เลือกวัสดุ  
+        5. คำนวณ k  
+        6. คำนวณ D  
+        """)
 
-    W18_capacity = (d_cm / 20)**4 * 1_000_000
-    ratio = W18_capacity / W18
-
-    if ratio >= 1:
-        st.success(f"✔️ D = {d_cm:.0f} cm รับ W18 = {W18:,.0f} ≥ {W18:,.0f} (Ratio = {ratio:.3f})")
-    else:
-        st.error(f"❌ D = {d_cm:.0f} cm รับ W18 ไม่พอ (Ratio = {ratio:.3f})")
-
-    # ------------------------
-    # CROSS SECTION (3 ชั้น)
-    # ------------------------
-    st.subheader("🏗️ Cross Section")
-
-    scale = 4
-
-    html = (
-        '<div style="display:flex; justify-content:center;">'
-        '<div style="width:300px; border-radius:16px; overflow:hidden; box-shadow:0 0 20px rgba(0,0,0,0.4); font-family:Segoe UI;">'
-
-        '<div style="height:' + str(d_cm*scale) + 'px;background:#6C757D;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;">'
-        + f'{d_cm:.1f} cm ({d_in:.2f} in)</div>'
-
-        '<div style="height:' + str(base_thickness*scale) + 'px;background:#588157;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;">'
-        + f'{base_thickness:.0f} cm (+{k_base:.0f} pci)</div>'
-
-        '<div style="height:80px;background:#7F5539;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;">'
-        + f'k = {k:.0f} pci</div>'
-
-        '</div></div>'
-    )
-
-    st.markdown(html, unsafe_allow_html=True)
+    st.info("หน่วย: 1 inch = 2.54 cm | 1 MPa = 145 psi")
