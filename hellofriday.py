@@ -34,7 +34,6 @@ def calc_SN_required(W18, Mr, So, ZR, deltaPSI):
         term2 = 9.36 * np.log10(SN + 1)
         term3 = (np.log10(deltaPSI/(4.2-1.5))) / (0.40 + (1094/(SN+1)**5.19))
         term4 = 2.32 * np.log10(Mr) - 8.07
-
         SN = 10 ** ((np.log10(W18) + term1 - term2 - term3 - term4)/9.36)
     return SN
 
@@ -128,19 +127,19 @@ if road == "Flexible Pavement":
         "SN":[SN1,SN2,SN3,SN4,SN5]
     })
 
-    # CROSS SECTION (แก้เฉพาะลำดับ)
+    # CROSS SECTION (แก้เรียง)
     st.subheader("Cross Section")
 
     fig, ax = plt.subplots(figsize=(3,6))
 
-    layers = [d1,d2,d3,d4,d5]
-    labels = ["D1","D2","D3","D4","D5"]
-    names  = ["AC","Base","Subbase","Layer4","Layer5"]
-    colors = ["#333333","#8c8c8c","#87CEEB","#f4a261","#2a9d8f"]
+    layers = [d5,d4,d3,d2,d1]
+    labels = ["D5","D4","D3","D2","D1"]
+    names  = ["Layer5","Layer4","Subbase","Base","AC"]
+    colors = ["#2a9d8f","#f4a261","#87CEEB","#8c8c8c","#333333"]
 
     bottom = 0
 
-    for i in reversed(range(len(layers))):
+    for i in range(len(layers)):
         if layers[i] > 0:
             ax.bar(0, layers[i], bottom=bottom, color=colors[i])
             ax.text(
@@ -149,7 +148,7 @@ if road == "Flexible Pavement":
                 f"{names[i]}\n{labels[i]} = {layers[i]:.1f} cm",
                 ha='center',
                 va='center',
-                color='white' if i==0 else 'black'
+                color='white' if i==4 else 'black'
             )
             bottom += layers[i]
 
@@ -225,18 +224,19 @@ if road == "Rigid Pavement":
         "SN":[SN1,SN2,SN3,SN4,SN5]
     })
 
+    # CROSS SECTION (แก้เรียง)
     st.subheader("Cross Section")
 
     fig, ax = plt.subplots(figsize=(3,6))
 
-    layers = [d1,d2,d3,d4,d5]
-    labels = ["D1","D2","D3","D4","D5"]
-    names  = ["Concrete","Base","Subbase","Layer4","Layer5"]
-    colors = ["#dddddd","#bbbbbb","#87CEEB","#f4a261","#2a9d8f"]
+    layers = [d5,d4,d3,d2,d1]
+    labels = ["D5","D4","D3","D2","D1"]
+    names  = ["Layer5","Layer4","Subbase","Base","Concrete"]
+    colors = ["#2a9d8f","#f4a261","#87CEEB","#bbbbbb","#dddddd"]
 
     bottom = 0
 
-    for i in reversed(range(len(layers))):
+    for i in range(len(layers)):
         if layers[i] > 0:
             ax.bar(0, layers[i], bottom=bottom, color=colors[i])
             ax.text(
