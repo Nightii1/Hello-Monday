@@ -103,9 +103,6 @@ if road == "Flexible Pavement":
     else:
         st.error("ไม่ผ่าน")
 
-    # ------------------------
-    # SECTION (แก้แล้วแน่นอน)
-    # ------------------------
     st.subheader("Cross Section")
 
     max_val = max(d1,d2,d3,1)
@@ -140,20 +137,15 @@ if road == "Rigid Pavement":
 
     st.write("Subgrade")
     st.progress(0.3)
-import streamlit as st
-import numpy as np
 
-st.set_page_config(layout="wide")
+# ========================
+# SUMMARY + SECTION (แก้ HTML)
+# ========================
 
 st.title("📊 สรุปผลการออกแบบ (ชั้นทาง)")
 
-# ------------------------
-# INPUT
-# ------------------------
-W18 = st.number_input("W18", value=10000000.0)
 SN_required = 5.240
 
-# Layer data (แก้ค่าได้)
 layers = [
     {"name":"AC", "a":0.40, "m":1.10, "D_cm":20.3},
     {"name":"CTBAC", "a":0.18, "m":1.10, "D_cm":22.2},
@@ -161,9 +153,6 @@ layers = [
     {"name":"Subgrade Improvement", "a":0.10, "m":1.10, "D_cm":10.2},
 ]
 
-# ------------------------
-# CALC SN
-# ------------------------
 SN_list = []
 SN_total = 0
 
@@ -173,13 +162,9 @@ for layer in layers:
     SN_total += SN
     SN_list.append(SN)
 
-# ------------------------
-# TABLE
-# ------------------------
 st.subheader("📋 ตารางสรุป")
 
 table_data = []
-
 for i, layer in enumerate(layers):
     table_data.append({
         "ชั้นที่": i+1,
@@ -193,22 +178,22 @@ for i, layer in enumerate(layers):
 
 st.dataframe(table_data, use_container_width=True)
 
-# ------------------------
-# RESULT
-# ------------------------
 if SN_total >= SN_required:
     st.success(f"SN = {SN_total:.3f} ≥ {SN_required} (ผ่าน)")
 else:
     st.error(f"SN = {SN_total:.3f} < {SN_required} (ไม่ผ่าน)")
 
 # ------------------------
-# SECTION (เหมือนรูปจริง)
+# SECTION (HTML FIX)
 # ------------------------
 st.subheader("🏗️ หน้าตัดโครงสร้างทาง")
 
 colors = ["#222222","#6b8e9e","#8b6b43","#d4a017"]
 
 total = sum([l["D_cm"] for l in layers])
+if total == 0:
+    total = 1
+
 scale = 400 / total
 
 html = '<div style="width:300px;margin:auto;border:2px solid #ccc;">'
@@ -223,13 +208,11 @@ for i, layer in enumerate(layers):
         align-items:center;
         justify-content:center;
         color:white;
-        font-weight:bold;
-        border-bottom:1px solid #000;">
+        font-weight:bold;">
         {layer["D_cm"]:.1f} cm
     </div>
     '''
 
-# subgrade
 html += '''
 <div style="
     height:80px;
@@ -245,4 +228,5 @@ html += '''
 
 html += '</div>'
 
+# 🔥 จุดสำคัญที่แก้
 st.markdown(html, unsafe_allow_html=True)
