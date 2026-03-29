@@ -50,11 +50,10 @@ with tab1:
             m3 = st.sidebar.number_input("m3", value=1.10)
             d3 = st.sidebar.number_input("Thickness (cm)", value=10.2)
 
-        # -------- CALC --------
+        # ===== CALC =====
         SN1 = a1*m1*(d1/2.54)
         SN2 = a2*m2*(d2/2.54)
         SN3 = a3*m3*(d3/2.54)
-
         SN_total = SN1 + SN2 + SN3
 
         st.subheader("📊 Result")
@@ -64,45 +63,36 @@ with tab1:
         else:
             st.error(f"SN = {SN_total:.3f} < {SN_required}")
 
-        # -------- CROSS SECTION --------
+        # ===== CROSS SECTION =====
         st.subheader("🏗️ Cross Section")
-
-        layers = [
-            ("AC", d1, "#2B2D42"),
-            ("Base", d2, "#3A86FF"),
-            ("Subbase", d3, "#8338EC")
-        ]
 
         total = d1 + d2 + d3
         scale = 400 / total if total != 0 else 1
 
         html = '<div style="display:flex;justify-content:center;"><div style="width:300px;">'
 
-        for name, t, c in layers:
-            html += f'<div style="height:{t*scale}px;background:{c};color:white;display:flex;align-items:center;justify-content:center;">{name}<br>{t:.1f} cm</div>'
-
+        html += f'<div style="height:{d1*scale}px;background:#2B2D42;color:white;text-align:center;">AC<br>{d1:.1f} cm</div>'
+        html += f'<div style="height:{d2*scale}px;background:#3A86FF;color:white;text-align:center;">Base<br>{d2:.1f} cm</div>'
+        html += f'<div style="height:{d3*scale}px;background:#8338EC;color:white;text-align:center;">Subbase<br>{d3:.1f} cm</div>'
         html += '<div style="height:80px;background:#1B4332;color:white;text-align:center;">Subgrade</div>'
+
         html += '</div></div>'
 
         st.markdown(html, unsafe_allow_html=True)
 
-        # -------- TABLE --------
+        # ===== TABLE =====
         st.subheader("📊 Layer Summary")
 
         df = pd.DataFrame({
             "Layer": ["AC", "Base", "Subbase"],
             "Thickness (cm)": [d1, d2, d3],
-            "SN Contribution": [SN1, SN2, SN3]
-        })
-
-        st.dataframe(df, use_container_width=True)
-
-        # -------- GRAPH --------
-        st.subheader("📈 SN Contribution")
-
-        st.bar_chart({
             "SN": [SN1, SN2, SN3]
         })
+
+        st.dataframe(df)
+
+        # ===== GRAPH =====
+        st.bar_chart(df.set_index("Layer")["SN"])
 
     # ================= RIGID =================
     if mode == "Rigid Pavement":
@@ -111,6 +101,7 @@ with tab1:
 
         k = st.sidebar.number_input("k", value=50.0)
         k_base = st.sidebar.number_input("Base", value=50.0)
+        base_thickness = st.sidebar.number_input("Base thickness", value=15.0)
         Sc = st.sidebar.number_input("Sc", value=650.0)
 
         k_eff = k + k_base
@@ -128,23 +119,37 @@ with tab1:
         <div style="height:{d_cm*4}px;background:#6C757D;color:white;text-align:center;">
         Concrete {d_cm:.1f} cm
         </div>
+        <div style="height:{base_thickness*4}px;background:#588157;color:white;text-align:center;">
+        Base {base_thickness} cm
+        </div>
         <div style="height:80px;background:#7F5539;color:white;text-align:center;">
-        Subgrade
+        k={k}
         </div>
         </div>
         """, unsafe_allow_html=True)
 
 # =========================================================
-# TAB 2
+# TAB 2 (คืนสูตรครบ)
 # =========================================================
 with tab2:
-    st.header("📘 Theory")
+    st.header("📘 ทฤษฎีและสูตร AASHTO 1993")
+
     st.latex(r"SN = a_1D_1m_1 + a_2D_2m_2 + a_3D_3m_3")
+
+    st.markdown("""
+    **Flexible Variables:**
+    - aᵢ = layer coefficient
+    - Dᵢ = thickness (inch)
+    - mᵢ = drainage factor
+    """)
+
+    st.latex(r"\log_{10}(W_{18}) = Z_RS_o + 7.35\log(D+1)")
 
 # =========================================================
 # TAB 3
 # =========================================================
 with tab3:
+    st.header("📈 Sensitivity")
     W = np.linspace(1e5,1e7,50)
     d = ((W/1e6)**0.25)*8*2.54
     st.line_chart({"Thickness": d})
@@ -153,14 +158,5 @@ with tab3:
 # TAB 4
 # =========================================================
 with tab4:
-
-    st.header("📄 Report")
-
-    W_test = st.number_input("W18", value=5000000.0)
-    d_opt = ((W_test/1e6)**0.25)*8*2.54
-
-    st.success(f"{d_opt:.2f} cm")
-
-    report = f"W18={W_test}, Thickness={d_opt:.2f} cm"
-
-    st.download_button("Download", report)
+    st.header("🚀 Advanced Tools")
+    st.write("Coming soon...")
