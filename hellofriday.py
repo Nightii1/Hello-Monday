@@ -162,3 +162,89 @@ if st.button("🔢 Calculate Rigid"):
     D = solve_D()
     st.success(f"Thickness = {D:.2f} inch")
     st.info(f"Recommended = {math.ceil(D)} inch")
+# ==============================
+# LAYER DESIGN (Flexible Pavement)
+# ==============================
+st.markdown("---")
+st.header("🧱 Pavement Layer Design")
+
+if 'result' in locals():
+
+    st.subheader("📥 Input Layer Properties")
+
+    l1, l2, l3 = st.columns(3)
+
+    with l1:
+        a1 = st.number_input("a1 (Asphalt)", 0.30, 0.50, 0.44)
+        D1_min = st.number_input("Min Asphalt Thickness (inch)", 1.0, 10.0, 3.0)
+
+    with l2:
+        a2 = st.number_input("a2 (Base)", 0.10, 0.30, 0.14)
+        m2 = st.number_input("m2", 0.5, 1.5, 1.0)
+        D2_min = st.number_input("Min Base Thickness (inch)", 2.0, 15.0, 6.0)
+
+    with l3:
+        a3 = st.number_input("a3 (Subbase)", 0.05, 0.20, 0.11)
+        m3 = st.number_input("m3", 0.5, 1.5, 1.0)
+
+    st.markdown("---")
+
+    if st.button("📐 Calculate Layer Thickness"):
+
+        SN = result
+
+        # Asphalt layer
+        D1 = D1_min
+        SN1 = a1 * D1
+
+        # Base layer
+        SN2_req = max(SN - SN1, 0)
+        D2 = max(SN2_req / (a2 * m2), D2_min)
+        SN2 = a2 * m2 * D2
+
+        # Subbase layer
+        SN3_req = max(SN - (SN1 + SN2), 0)
+        D3 = SN3_req / (a3 * m3) if SN3_req > 0 else 0
+
+        # ==============================
+        # RESULT
+        # ==============================
+        st.subheader("📊 Layer Thickness Result")
+
+        st.write(f"**Total SN Required = {SN:.2f}**")
+
+        st.write("### 🟫 Asphalt Surface")
+        st.write(f"Thickness = {D1:.2f} inch")
+
+        st.write("### 🟨 Base Course")
+        st.write(f"Thickness = {D2:.2f} inch")
+
+        st.write("### 🟩 Subbase")
+        st.write(f"Thickness = {D3:.2f} inch")
+
+        st.markdown("---")
+
+        # ==============================
+        # VISUAL SECTION (TEXT)
+        # ==============================
+        st.subheader("🧱 Pavement Section")
+
+        st.markdown(f"""
+        ```
+        ┌──────────────────────────┐
+        │ Asphalt  : {D1:.1f} in   │
+        ├──────────────────────────┤
+        │ Base     : {D2:.1f} in   │
+        ├──────────────────────────┤
+        │ Subbase  : {D3:.1f} in   │
+        └──────────────────────────┘
+        Subgrade
+        ```
+        """)
+
+        # ==============================
+        # CHECK SN
+        # ==============================
+        SN_check = a1*D1 + a2*m2*D2 + a3*m3*D3
+
+        st.success(f"✅ SN Check = {SN_check:.2f}")
