@@ -22,18 +22,33 @@ if mode == "Flexible Pavement":
 
     st.header("Flexible Pavement")
 
-    a1 = st.sidebar.number_input("a1 (AC)", value=0.40)
-    m1 = st.sidebar.number_input("m1", value=1.10)
-    d1 = st.sidebar.number_input("AC (cm)", value=20.3)
+    # 🔥 เปลี่ยนเฉพาะตรงนี้ (Layer Panel)
+    st.sidebar.markdown("## 🧱 Layer Configuration")
 
-    a2 = st.sidebar.number_input("a2 (Base)", value=0.18)
-    m2 = st.sidebar.number_input("m2", value=1.10)
-    d2 = st.sidebar.number_input("Base (cm)", value=22.2)
+    # -------- AC --------
+    with st.sidebar.expander("Layer 1: Asphalt (AC)", expanded=True):
+        a1 = st.number_input("a1 (AC)", value=0.40)
+        m1 = st.number_input("m1 (AC)", value=1.10)
+        d1 = st.number_input("Thickness AC (cm)", value=20.3)
+        st.caption("Typical range: 5 – 20 cm")
 
-    a3 = st.sidebar.number_input("a3 (Subbase)", value=0.13)
-    m3 = st.sidebar.number_input("m3", value=1.10)
-    d3 = st.sidebar.number_input("Subbase (cm)", value=10.2)
+    # -------- BASE --------
+    with st.sidebar.expander("Layer 2: Base (CTBAC)"):
+        a2 = st.number_input("a2 (Base)", value=0.18)
+        m2 = st.number_input("m2 (Base)", value=1.10)
+        d2 = st.number_input("Thickness Base (cm)", value=22.2)
+        st.caption("Typical range: 10 – 30 cm")
 
+    # -------- SUBBASE --------
+    with st.sidebar.expander("Layer 3: Subbase"):
+        a3 = st.number_input("a3 (Subbase)", value=0.13)
+        m3 = st.number_input("m3 (Subbase)", value=1.10)
+        d3 = st.number_input("Thickness Subbase (cm)", value=10.2)
+        st.caption("Typical range: 10 – 25 cm")
+
+    # ------------------------
+    # CALC SN (เดิมทั้งหมด)
+    # ------------------------
     def SN(a, m, D):
         return a * m * (D / 2.54)
 
@@ -61,7 +76,7 @@ if mode == "Flexible Pavement":
         st.error(f"SN = {SN_total:.3f} < {SN_required} (ไม่ผ่าน)")
 
     # ------------------------
-    # CROSS SECTION
+    # CROSS SECTION (เดิม)
     # ------------------------
     st.subheader("🏗️ หน้าตัดโครงสร้างทาง")
 
@@ -106,7 +121,7 @@ if mode == "Flexible Pavement":
     st.markdown(html, unsafe_allow_html=True)
 
 # ========================
-# RIGID
+# RIGID (เดิมทั้งหมด)
 # ========================
 if mode == "Rigid Pavement":
 
