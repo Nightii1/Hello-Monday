@@ -1,6 +1,5 @@
 import streamlit as st
 import numpy as np
-import matplotlib.pyplot as plt
 
 st.set_page_config(layout="wide")
 
@@ -72,7 +71,7 @@ if road == "Flexible Pavement":
 
     st.subheader("Layer Properties")
 
-    c1,c2,c3,c4,c5 = st.columns(5)
+    c1,c2,c3 = st.columns(3)
 
     with c1:
         a1=st.number_input("a1",0.0,1.0,0.40)
@@ -89,32 +88,20 @@ if road == "Flexible Pavement":
         m3=st.number_input("m3",0.0,2.0,1.1)
         d3=st.number_input("D3 Subbase (cm)",0.0,100.0,25.0)
 
-    with c4:
-        a4=st.number_input("a4",0.0,1.0,0.0)
-        m4=st.number_input("m4",0.0,2.0,1.0)
-        d4=st.number_input("D4 (cm)",0.0,100.0,0.0)
-
-    with c5:
-        a5=st.number_input("a5",0.0,1.0,0.0)
-        m5=st.number_input("m5",0.0,2.0,1.0)
-        d5=st.number_input("D5 (cm)",0.0,100.0,0.0)
-
     SN1=a1*m1*(d1/2.54)
     SN2=SN1+a2*m2*(d2/2.54)
     SN3=SN2+a3*m3*(d3/2.54)
-    SN4=SN3+a4*m4*(d4/2.54)
-    SN5=SN4+a5*m5*(d5/2.54)
 
-    total = d1+d2+d3+d4+d5
+    total = d1+d2+d3
 
     col1,col2,col3,col4 = st.columns(4)
 
     col1.markdown(f'<div class="metric-box bg1">SN Required<br>{SN_req:.3f}</div>',unsafe_allow_html=True)
-    col2.markdown(f'<div class="metric-box bg2">SN Provided<br>{SN5:.3f}</div>',unsafe_allow_html=True)
+    col2.markdown(f'<div class="metric-box bg2">SN Provided<br>{SN3:.3f}</div>',unsafe_allow_html=True)
     col3.markdown(f'<div class="metric-box bg3">Total Thickness<br>{total:.1f} cm</div>',unsafe_allow_html=True)
     col4.markdown(f'<div class="metric-box bg4">W18<br>{W18:,.0f}</div>',unsafe_allow_html=True)
 
-    if SN5 >= SN_req:
+    if SN3 >= SN_req:
         st.success("ผ่าน")
     else:
         st.error("ไม่ผ่าน")
@@ -122,42 +109,45 @@ if road == "Flexible Pavement":
     st.subheader("Summary")
 
     st.table({
-        "Layer":["AC","Base","Subbase","Layer4","Layer5"],
-        "Thickness (cm)":[d1,d2,d3,d4,d5],
-        "SN":[SN1,SN2,SN3,SN4,SN5]
+        "Layer":["AC","Base","Subbase"],
+        "Thickness (cm)":[d1,d2,d3],
+        "SN":[SN1,SN2,SN3]
     })
 
-    # CROSS SECTION
+    # ------------------------
+    # SECTION (NO MATPLOTLIB)
+    # ------------------------
     st.subheader("Cross Section")
 
-    fig, ax = plt.subplots(figsize=(3,6))
+    total_thick = d1+d2+d3
+    if total_thick == 0:
+        total_thick = 1
 
-    layers = [d5,d4,d3,d2,d1]
-    labels = ["D5","D4","D3","D2","D1"]
-    names  = ["Layer5","Layer4","Subbase","Base","AC"]
-    colors = ["#2a9d8f","#f4a261","#87CEEB","#8c8c8c","#333333"]
+    scale = 300 / total_thick
 
-    bottom = 0
+    html = f"""
+    <div style="width:250px;margin:auto;text-align:center;">
 
-    for i in range(len(layers)):
-        if layers[i] > 0:
-            ax.bar(0, layers[i], bottom=bottom, color=colors[i])
-            ax.text(
-                0,
-                bottom + layers[i]/2,
-                f"{names[i]}\n{labels[i]} = {layers[i]:.1f} cm",
-                ha='center',
-                va='center',
-                color='white' if i==4 else 'black'
-            )
-            bottom += layers[i]
+        <div style="height:{d1*scale}px;background:#333;color:white;
+        display:flex;align-items:center;justify-content:center;">
+        AC {d1:.1f} cm</div>
 
-    ax.set_xlim(-1,1)
-    ax.set_xticks([])
-    ax.set_ylabel("Thickness (cm)")
-    ax.set_title("Flexible Pavement Section")
+        <div style="height:{d2*scale}px;background:#c2b280;
+        display:flex;align-items:center;justify-content:center;">
+        Base {d2:.1f} cm</div>
 
-    st.pyplot(fig)
+        <div style="height:{d3*scale}px;background:#8fbc8f;
+        display:flex;align-items:center;justify-content:center;">
+        Subbase {d3:.1f} cm</div>
+
+        <div style="height:50px;background:#d3d3d3;
+        display:flex;align-items:center;justify-content:center;">
+        Subgrade</div>
+
+    </div>
+    """
+
+    st.markdown(html, unsafe_allow_html=True)
 
 # ------------------------
 # RIGID
@@ -166,94 +156,6 @@ if road == "Rigid Pavement":
 
     st.title("Rigid Pavement — AASHTO 1993")
 
-    st.subheader("Layer Properties")
+    d = st.number_input("Concrete Thickness (cm)",0.0,100.0,25.0)
 
-    c1,c2,c3,c4,c5 = st.columns(5)
-
-    with c1:
-        a1=st.number_input("a1",0.0,2.0,1.0,key="ra1")
-        m1=st.number_input("m1",0.0,2.0,1.0,key="rm1")
-        d1=st.number_input("D1 Concrete (cm)",0.0,100.0,25.0)
-
-    with c2:
-        a2=st.number_input("a2",0.0,1.0,0.14,key="ra2")
-        m2=st.number_input("m2",0.0,2.0,1.0,key="rm2")
-        d2=st.number_input("D2 Base (cm)",0.0,100.0,10.0)
-
-    with c3:
-        a3=st.number_input("a3",0.0,1.0,0.11,key="ra3")
-        m3=st.number_input("m3",0.0,2.0,1.0,key="rm3")
-        d3=st.number_input("D3 Subbase (cm)",0.0,100.0,15.0)
-
-    with c4:
-        a4=st.number_input("a4",0.0,1.0,0.0,key="ra4")
-        m4=st.number_input("m4",0.0,2.0,1.0,key="rm4")
-        d4=st.number_input("D4 (cm)",0.0,100.0,0.0)
-
-    with c5:
-        a5=st.number_input("a5",0.0,1.0,0.0,key="ra5")
-        m5=st.number_input("m5",0.0,2.0,1.0,key="rm5")
-        d5=st.number_input("D5 (cm)",0.0,100.0,0.0)
-
-    SN1=a1*m1*(d1/2.54)
-    SN2=SN1+a2*m2*(d2/2.54)
-    SN3=SN2+a3*m3*(d3/2.54)
-    SN4=SN3+a4*m4*(d4/2.54)
-    SN5=SN4+a5*m5*(d5/2.54)
-
-    total = d1+d2+d3+d4+d5
-    SN_req = (np.log10(W18)+1)*3
-
-    col1,col2,col3,col4 = st.columns(4)
-
-    col1.markdown(f'<div class="metric-box bg1">Required<br>{SN_req:.3f}</div>',unsafe_allow_html=True)
-    col2.markdown(f'<div class="metric-box bg2">Provided<br>{SN5:.3f}</div>',unsafe_allow_html=True)
-    col3.markdown(f'<div class="metric-box bg3">Total Thickness<br>{total:.1f} cm</div>',unsafe_allow_html=True)
-    col4.markdown(f'<div class="metric-box bg4">W18<br>{W18:,.0f}</div>',unsafe_allow_html=True)
-
-    if SN5 >= SN_req:
-        st.success("ผ่าน")
-    else:
-        st.error("ไม่ผ่าน")
-
-    st.subheader("Summary")
-
-    st.table({
-        "Layer":["Concrete","Base","Subbase","Layer4","Layer5"],
-        "Thickness (cm)":[d1,d2,d3,d4,d5],
-        "SN":[SN1,SN2,SN3,SN4,SN5]
-    })
-
-    st.subheader("Cross Section")
-
-    fig, ax = plt.subplots(figsize=(3,6))
-
-    layers = [d5,d4,d3,d2,d1]
-    labels = ["D5","D4","D3","D2","D1"]
-    names  = ["Layer5","Layer4","Subbase","Base","Concrete"]
-    colors = ["#2a9d8f","#f4a261","#87CEEB","#bbbbbb","#dddddd"]
-
-    bottom = 0
-
-    for i in range(len(layers)):
-        if layers[i] > 0:
-            ax.bar(0, layers[i], bottom=bottom, color=colors[i])
-            ax.text(
-                0,
-                bottom + layers[i]/2,
-                f"{names[i]}\n{labels[i]} = {layers[i]:.1f} cm",
-                ha='center',
-                va='center'
-            )
-            bottom += layers[i]
-
-    ax.set_xlim(-1,1)
-    ax.set_xticks([])
-    ax.set_ylabel("Thickness (cm)")
-    ax.set_title("Rigid Pavement Section")
-
-    st.pyplot(fig)
-    ax.set_ylabel("Thickness (cm)")
-    ax.set_title("Rigid Pavement Section")
-
-    st.pyplot(fig)
+    st.success(f"Thickness = {d:.1f} cm")
