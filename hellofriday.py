@@ -1,25 +1,17 @@
 import streamlit as st
 import numpy as np
-import matplotlib.pyplot as plt
-from reportlab.platypus import SimpleDocTemplate, Paragraph
-from reportlab.lib.styles import getSampleStyleSheet
 
 st.set_page_config(layout="wide")
 
 st.title("🚀 Pavement Design Pro (AASHTO 1993)")
 
-# ------------------------
-# TABS
-# ------------------------
 tab1, tab2, tab3 = st.tabs([
     "📊 ผลการออกแบบ",
     "📘 ทฤษฎีและสูตร",
     "📈 Sensitivity"
 ])
 
-# =========================================================
-# TAB 1 = DESIGN
-# =========================================================
+# ================= TAB 1 =================
 with tab1:
 
     st.sidebar.header("🔧 Input")
@@ -28,9 +20,7 @@ with tab1:
 
     W18 = st.sidebar.number_input("W18", value=5000000.0)
 
-    # ========================
-    # FLEXIBLE (เดิม)
-    # ========================
+    # -------- FLEXIBLE --------
     if mode == "Flexible Pavement":
 
         st.header("Flexible Pavement")
@@ -46,12 +36,10 @@ with tab1:
 
         st.success(f"SN = {SN_total:.3f}")
 
-    # ========================
-    # RIGID (🔥 PRO)
-    # ========================
+    # -------- RIGID --------
     if mode == "Rigid Pavement":
 
-        st.header("Rigid Pavement (Advanced)")
+        st.header("Rigid Pavement")
 
         k = st.sidebar.number_input("k (pci)", value=50.0)
         k_base = st.sidebar.number_input("Base improvement", value=50.0)
@@ -66,47 +54,27 @@ with tab1:
         d_in = calc_d(W18)
         d_cm = d_in * 2.54
 
-        st.subheader("📊 Result")
         st.success(f"D = {d_cm:.2f} cm")
 
-        # 🔥 STEP BY STEP
-        with st.expander("📐 แสดงขั้นตอนคำนวณ"):
-            st.write(f"1. W18 = {W18:,.0f}")
-            st.write(f"2. k_effective = {k_eff}")
-            st.write(f"3. ใช้ empirical formula")
-            st.write(f"4. ได้ D = {d_cm:.2f} cm")
+        # STEP
+        with st.expander("📐 ขั้นตอนคำนวณ"):
+            st.write(f"W18 = {W18:,.0f}")
+            st.write(f"k_effective = {k_eff}")
+            st.write(f"D = {d_cm:.2f} cm")
 
-        # 🔥 EXPORT PDF
-        def create_pdf():
-            doc = SimpleDocTemplate("report.pdf")
-            styles = getSampleStyleSheet()
-            story = []
-            story.append(Paragraph(f"D = {d_cm:.2f} cm", styles["Normal"]))
-            doc.build(story)
-
-        if st.button("📄 Export PDF"):
-            create_pdf()
-            st.success("ดาวน์โหลด report.pdf ได้เลย")
-
-# =========================================================
-# TAB 2 = THEORY
-# =========================================================
+# ================= TAB 2 =================
 with tab2:
 
-    st.header("📘 Theory (AASHTO 1993)")
+    st.header("📘 Theory")
 
     st.latex(r'''
     \log_{10}(W_{18}) = Z_R S_o + 7.35\log(D+1)
     ''')
 
-    st.info("Full equation + parameters")
-
-# =========================================================
-# TAB 3 = SENSITIVITY
-# =========================================================
+# ================= TAB 3 =================
 with tab3:
 
-    st.header("📈 Sensitivity Analysis")
+    st.header("📈 Sensitivity")
 
     W_range = np.linspace(1e5, 1e7, 50)
 
@@ -118,9 +86,4 @@ with tab3:
 
     d_vals = [calc_d(w)*2.54 for w in W_range]
 
-    fig = plt.figure()
-    plt.plot(W_range, d_vals)
-    plt.xlabel("W18")
-    plt.ylabel("Thickness (cm)")
-
-    st.pyplot(fig)
+    st.line_chart({"Thickness (cm)": d_vals})
