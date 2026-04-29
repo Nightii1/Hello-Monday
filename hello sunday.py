@@ -1,7 +1,7 @@
 import streamlit as st
 import numpy as np
 import math
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
 # ---------------------- CONFIG ----------------------
 st.set_page_config(page_title="Bearing Capacity Tool", layout="wide")
@@ -9,9 +9,6 @@ st.set_page_config(page_title="Bearing Capacity Tool", layout="wide")
 # ---------------------- CSS ----------------------
 st.markdown("""
 <style>
-body {
-    background-color: #f4f6f9;
-}
 .title {
     text-align: center;
     font-size: 36px;
@@ -33,7 +30,6 @@ body {
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------------- TITLE ----------------------
 st.markdown('<div class="title">Bearing Capacity (Eccentric Footing)</div>', unsafe_allow_html=True)
 
 # ---------------------- FUNCTIONS ----------------------
@@ -127,48 +123,37 @@ if calc:
         st.error("❌ Eccentricity มากเกินไป → B' ติดลบ")
     else:
         qall = qult / FS
-        B_eff = B - 2*ex
 
         st.markdown('<div class="card">', unsafe_allow_html=True)
-
         st.subheader("📊 Results")
-        st.write(f"B' = {B_eff:.2f} m")
 
         st.markdown(f'<div class="result">q_ult = {qult:.2f} kPa</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="result">q_all = {qall:.2f} kPa</div>', unsafe_allow_html=True)
-
         st.markdown('</div>', unsafe_allow_html=True)
 
         # ---------------------- GRAPH q vs B ----------------------
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.subheader("📈 q vs B")
-
         B_vals = np.linspace(0.5, B*2, 30)
-        q_vals = []
+        q_vals = [calculate_bearing(method, b, L, D, c, phi, gamma, ex, ey) or 0 for b in B_vals]
 
-        for b in B_vals:
-            q = calculate_bearing(method, b, L, D, c, phi, gamma, ex, ey)
-            q_vals.append(q if q else 0)
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=B_vals, y=q_vals, mode='lines', name='q_ult'))
 
-        fig, ax = plt.subplots()
-        ax.plot(B_vals, q_vals)
-        ax.set_xlabel("B (m)")
-        ax.set_ylabel("q_ult (kPa)")
-        ax.set_title("Variation of q with B")
+        fig.update_layout(
+            title="q vs B",
+            xaxis_title="B (m)",
+            yaxis_title="q_ult (kPa)"
+        )
 
-        st.pyplot(fig)
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.plotly_chart(fig, use_container_width=True)
 
         # ---------------------- SENSITIVITY ----------------------
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.subheader("📊 Sensitivity Analysis")
-
-        param = st.selectbox("Parameter", ["B", "D", "c", "φ", "γ"])
+        param = st.selectbox("Sensitivity Parameter", ["B", "D", "c", "φ", "γ"])
 
         base = {"B": B, "D": D, "c": c, "φ": phi, "γ": gamma}
-
         var = np.linspace(0.8, 1.2, 25)
+
         q_sen = []
+        x = []
 
         for v in var:
             temp = base.copy()
@@ -180,15 +165,17 @@ if calc:
                 temp["c"], temp["φ"],
                 temp["γ"], ex, ey
             )
+
             q_sen.append(q if q else 0)
+            x.append(temp[param])
 
-        x = var * base[param]
+        fig2 = go.Figure()
+        fig2.add_trace(go.Scatter(x=x, y=q_sen, mode='lines', name='Sensitivity'))
 
-        fig2, ax2 = plt.subplots()
-        ax2.plot(x, q_sen)
-        ax2.set_xlabel(param)
-        ax2.set_ylabel("q_ult (kPa)")
-        ax2.set_title(f"Sensitivity vs {param}")
+        fig2.update_layout(
+            title=f"Sensitivity vs {param}",
+            xaxis_title=param,
+            yaxis_title="q_ult (kPa)"
+        )
 
-        st.pyplot(fig2)
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.plotly_chart(fig2, use_container_width=True)
