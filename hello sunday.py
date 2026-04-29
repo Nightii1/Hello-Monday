@@ -10,89 +10,60 @@ st.set_page_config(
 # ---------------------- CUSTOM CSS ----------------------
 st.markdown("""
 <style>
-/* Background */
-.stApp {
-    background: linear-gradient(to right, #eef2f7, #f8fafc);
+.main {
+    background-color: #f5f7fa;
 }
-
-/* Title */
 .title {
     text-align: center;
-    font-size: 38px;
+    font-size: 32px;
     font-weight: bold;
     color: #1f4e79;
-    margin-bottom: 10px;
 }
-
-/* Subtitle */
-.subtitle {
-    text-align: center;
-    font-size: 16px;
-    color: #555;
-    margin-bottom: 25px;
+.box {
+    background-color: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
 }
-
-/* Card */
-.card {
-    background: white;
-    padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0px 6px 18px rgba(0,0,0,0.1);
-    margin-bottom: 25px;
-}
-
-/* Result */
 .result {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: bold;
     color: #0a7d5e;
-}
-
-/* Button */
-div.stButton > button {
-    width: 100%;
-    border-radius: 10px;
-    height: 50px;
-    font-size: 16px;
-    font-weight: bold;
-}
-
-/* Input box */
-input {
-    border-radius: 8px !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------------- TITLE ----------------------
-st.markdown('<div class="title">Terzaghi Bearing Capacity</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Eccentric Footing Analysis</div>', unsafe_allow_html=True)
+st.markdown('<div class="title">Terzaghi Bearing Capacity (Eccentric Footing)</div>', unsafe_allow_html=True)
 
 # ---------------------- INPUT ----------------------
 with st.container():
-    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown('<div class="box">', unsafe_allow_html=True)
 
     st.subheader("📥 Input Parameters")
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("**📐 Geometry**")
         B = st.number_input("Width B (m)", min_value=0.0, value=2.0)
         L = st.number_input("Length L (m)", min_value=0.0, value=3.0)
         D = st.number_input("Depth D (m)", min_value=0.0, value=1.5)
 
     with col2:
-        st.markdown("**🧱 Soil Properties**")
         c = st.number_input("Cohesion c (kPa)", min_value=0.0, value=25.0)
         phi = st.number_input("Friction angle φ (deg)", min_value=0.0, value=30.0)
         gamma = st.number_input("Unit weight γ (kN/m³)", min_value=0.0, value=18.0)
 
+    st.markdown("### 📐 Eccentricity")
+    col3, col4 = st.columns(2)
+
     with col3:
-        st.markdown("**⚖️ Load & Safety**")
         ex = st.number_input("eₓ (m)", min_value=0.0, value=0.0)
+
+    with col4:
         ey = st.number_input("eᵧ (m)", min_value=0.0, value=0.0)
-        FS = st.number_input("Factor of Safety (FS)", min_value=1.0, value=3.0)
+
+    FS = st.number_input("Factor of Safety (FS)", min_value=1.0, value=3.0)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -139,7 +110,7 @@ if calculate:
         qall = qult / FS
 
         # ---------------------- OUTPUT ----------------------
-        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.markdown('<div class="box">', unsafe_allow_html=True)
 
         st.subheader("📊 Results")
 
@@ -150,11 +121,3 @@ if calculate:
         st.markdown(f'<div class="result">q₍all₎ = {qall:.2f} kPa</div>', unsafe_allow_html=True)
 
         st.markdown('</div>', unsafe_allow_html=True)
-
-# ---------------------- FOOTER ----------------------
-st.markdown("""
-<hr>
-<p style='text-align:center; color:gray; font-size:14px;'>
-Developed for Civil Engineering • Geotechnical Analysis Tool
-</p>
-""", unsafe_allow_html=True)
